@@ -47,7 +47,7 @@
 | `/` | `index.html` | Implemented (landing) |
 | `/login` | `login.html` (+ `#signup`) | Not implemented (404) |
 | `/accept-invite` | `accept-invite.html` | Not implemented |
-| `/onboarding` | `onboarding.html` | Not implemented |
+| `/dashboard/onboarding` | `onboarding.html` | Implemented (dashboard shell) |
 | `/dashboard` | `dashboard.html` | Not implemented |
 | `/feedback/[orgId]/[tableId]` | `feedback.html` | Not implemented |
 | `/feedback/.../review` | `review.html` | Not implemented |
@@ -112,16 +112,16 @@
 
 ## Phase 4 — Business onboarding UI (`onboarding.html`)
 
-- [ ] Reproduce organization/business setup layout from the reference.
-- [ ] Implement organization name and business type fields.
-- [ ] Implement preset/custom label selection.
-- [ ] Implement spot count input with client-side maximum of 50 and clear validation UX.
-- [ ] Implement optional public review URL input and client-side URL validation.
-- [ ] Implement alert-recipient choice: self or invited manager.
-- [ ] Show manager name/email fields only when the manager option is selected.
-- [ ] Implement a local review/confirmation state without creating real records or sending invitations.
-- [ ] Implement the QR result/print handoff state only to the extent shown by the reference.
-- [ ] Verify all conditional fields and responsive layouts.
+- [x] Reproduce organization/business setup layout from the reference.
+- [x] Implement organization name and business type fields.
+- [x] Implement preset/custom label selection.
+- [x] Implement spot count input with client-side maximum of 50 and clear validation UX.
+- [x] Implement optional public review URL input and client-side URL validation.
+- [x] Implement alert-recipient choice: self or invited manager.
+- [x] Show manager name/email fields only when the manager option is selected.
+- [x] Implement a local review/confirmation state without creating real records or sending invitations.
+- [x] Implement the QR result/print handoff state only to the extent shown by the reference.
+- [x] Verify all conditional fields and responsive layouts.
 
 **Exit criteria:** Onboarding interactions work locally and clearly do not persist data yet.
 

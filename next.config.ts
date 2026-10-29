@@ -25,6 +25,11 @@ const nextConfig: NextConfig = {
         destination: "/auth/login",
         permanent: false,
       },
+      {
+        source: "/onboarding",
+        destination: "/dashboard/onboarding",
+        permanent: false,
+      },
     ];
   },
   experimental: {

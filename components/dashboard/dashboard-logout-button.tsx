@@ -8,6 +8,7 @@ import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ApiClientError } from "@/lib/api/api-error";
 import { postLogout } from "@/lib/api/auth";
+import { useDashboardSearch } from "@/components/dashboard/dashboard-search-context";
 import { clearAuthSessionQueries } from "@/lib/auth/query-cache";
 
 type DashboardLogoutButtonProps = {
@@ -17,6 +18,7 @@ type DashboardLogoutButtonProps = {
 export function DashboardLogoutButton({ onError }: DashboardLogoutButtonProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { setGlobalSearch } = useDashboardSearch();
   const [submitting, setSubmitting] = useState(false);
 
   const handleLogout = useCallback(async () => {
@@ -24,6 +26,7 @@ export function DashboardLogoutButton({ onError }: DashboardLogoutButtonProps) {
     setSubmitting(true);
     try {
       await postLogout();
+      setGlobalSearch("");
       clearAuthSessionQueries(queryClient);
       router.push("/auth/login");
       router.refresh();
@@ -36,7 +39,7 @@ export function DashboardLogoutButton({ onError }: DashboardLogoutButtonProps) {
     } finally {
       setSubmitting(false);
     }
-  }, [onError, queryClient, router, submitting]);
+  }, [onError, queryClient, router, setGlobalSearch, submitting]);
 
   return (
     <Button

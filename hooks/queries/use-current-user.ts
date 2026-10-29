@@ -11,6 +11,7 @@ export function useCurrentUser() {
     queryKey: queryKeys.auth.me,
     queryFn: getAuthMe,
     staleTime: 60_000,
+    refetchOnMount: "always",
     retry: (failureCount, error) => {
       if (error instanceof ApiClientError && error.status === 401) {
         return false;

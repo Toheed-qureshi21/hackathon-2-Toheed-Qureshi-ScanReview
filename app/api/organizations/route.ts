@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from "@/lib/auth/session";
 import {
   createOrganizationFromOnboarding,
   OrganizationAlreadyExistsError,
+  QrPersistenceFailedError,
 } from "@/lib/services/organizations-onboarding";
 import {
   createOrganizationBodySchema,
@@ -45,6 +46,13 @@ export async function POST(request: Request) {
         "ORGANIZATION_ALREADY_EXISTS",
         "You already belong to an organization.",
         409,
+      );
+    }
+    if (error instanceof QrPersistenceFailedError) {
+      return jsonError(
+        "QR_STORAGE_FAILED",
+        "Your organization could not be saved because QR upload failed. Try again.",
+        500,
       );
     }
     return jsonError(

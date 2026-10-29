@@ -80,7 +80,7 @@
 - [x] Integrate onboarding Axios function, mutation hook and UI states. Replace only onboarding mock success.
 - [x] Test validation failures, cap enforcement, authorization, duplicate submission, and transaction behavior. *(Unit tests for Zod + tokens; live DB/API integration and rollback tests not automated.)*
 
-**Verified (Oct 2026):** `POST /api/organizations` creates org + admin `Member` + `Spot` rows in one transaction; duplicate membership returns `409`; manager invite is stored but **not sent** (Brevo/invite slice deferred). Migration `20261029082240_onboarding_organization_spots`. QR URLs use `APP_URL` / `NEXT_PUBLIC_APP_URL` / `VERCEL_URL`, not request `Host`.
+**Verified (Oct 2026):** `POST /api/organizations` creates org + admin `Member` + `Spot` rows in one transaction; duplicate membership returns `409`; manager invite is stored but **not sent** (Brevo/invite slice deferred). Migrations through `20261029083357_spot_qr_storage_path`. QR **feedback** URLs use `APP_URL` / `NEXT_PUBLIC_APP_URL` / `VERCEL_URL`, not request `Host`. Onboarding generates PNG QRs server-side, uploads to public bucket `scanreview-qr-codes`, persists `Spot.qrStoragePath`; upload failure rolls back org + best-effort Storage cleanup (`QR_STORAGE_FAILED`). See `docs/storage/qr-codes-bucket.md`.
 
 **Exit criteria:** onboarding creates persisted organization and spots; the UI displays the server response.
 

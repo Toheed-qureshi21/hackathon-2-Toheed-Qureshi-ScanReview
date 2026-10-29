@@ -2,16 +2,26 @@ import "server-only";
 
 import { formatSpotName } from "@/lib/onboarding/constants";
 import { getTrustedAppOrigin } from "@/lib/env/app-origin";
-import {
-  publicSpotFeedbackPath,
-  publicSpotFeedbackUrl,
-} from "@/lib/feedback/public-spot-url";
+import { getPublicEnv } from "@/lib/env/public";
+import { publicSpotFeedbackUrl } from "@/lib/feedback/public-spot-url";
 import { prisma } from "@/lib/db/prisma";
 import type { SupabaseAuthUser } from "@/lib/auth/me-mapper";
+import { buildOnboardingSpotDto } from "@/lib/services/onboarding-spot-dto";
 import { generatePublicSpotToken } from "@/lib/spots/public-token";
+import { renderQrPngBuffer } from "@/lib/spots/render-qr-png";
+import {
+  removeQrObjects,
+  uploadSpotQrPng,
+} from "@/lib/storage/qr-code-storage";
+import { spotQrStoragePath } from "@/lib/storage/qr-codes-constants";
 import type { CreateOrganizationResponse } from "@/types/organization-onboarding";
+
 export class OrganizationAlreadyExistsError extends Error {
   readonly name = "OrganizationAlreadyExistsError";
+}
+
+export class QrPersistenceFailedError extends Error {
+  readonly name = "QrPersistenceFailedError";
 }
 
 export type OnboardingDomainInput = {
@@ -31,6 +41,13 @@ type TransactionClient = Parameters<
   Parameters<typeof prisma.$transaction>[0]
 >[0];
 
+type CreatedSpotRow = {
+  id: string;
+  number: number;
+  displayName: string;
+  publicToken: string;
+};
+
 async function reservePublicToken(tx: TransactionClient): Promise<string> {
   for (let attempt = 0; attempt < 6; attempt += 1) {
     const token = generatePublicSpotToken();
@@ -45,24 +62,43 @@ async function reservePublicToken(tx: TransactionClient): Promise<string> {
   throw new Error("Unable to allocate a unique public token.");
 }
 
+async function rollbackOnboardingAttempt(
+  organizationId: string,
+  uploadedPaths: string[],
+): Promise<void> {
+  await removeQrObjects(uploadedPaths);
+  try {
+    await prisma.organization.delete({ where: { id: organizationId } });
+  } catch {
+    console.error(
+      "[onboarding] Failed to roll back organization after QR error:",
+      organizationId,
+    );
+  }
+}
+
 export async function createOrganizationFromOnboarding(
   input: OnboardingDomainInput,
   user: SupabaseAuthUser,
 ): Promise<CreateOrganizationResponse> {
   const appOrigin = getTrustedAppOrigin();
+  const { NEXT_PUBLIC_SUPABASE_URL: supabaseProjectUrl } = getPublicEnv();
 
-  return prisma.$transaction(async (tx) => {
-    const existingMember = await tx.member.findUnique({
-      where: { userId: user.id },
-      select: { id: true },
-    });
-    if (existingMember) {
-      throw new OrganizationAlreadyExistsError();
-    }
+  const existingMember = await prisma.member.findUnique({
+    where: { userId: user.id },
+    select: { id: true },
+  });
+  if (existingMember) {
+    throw new OrganizationAlreadyExistsError();
+  }
 
-    const alertRecipient =
-      input.alertRecipient === "manager" ? "MANAGER_PENDING" : "ADMIN";
+  const alertRecipient =
+    input.alertRecipient === "manager" ? "MANAGER_PENDING" : "ADMIN";
 
+  const adminAlertEmail =
+    input.alertRecipient === "me" ? (user.email?.trim() || null) : null;
+
+  const created = await prisma.$transaction(async (tx) => {
     const organization = await tx.organization.create({
       data: {
         name: input.name,
@@ -79,9 +115,6 @@ export async function createOrganizationFromOnboarding(
       },
     });
 
-    const adminAlertEmail =
-      input.alertRecipient === "me" ? (user.email?.trim() || null) : null;
-
     const membership = await tx.member.create({
       data: {
         userId: user.id,
@@ -91,7 +124,7 @@ export async function createOrganizationFromOnboarding(
       },
     });
 
-    const spots: CreateOrganizationResponse["spots"] = [];
+    const spotRows: CreatedSpotRow[] = [];
 
     for (let number = 1; number <= input.spotCount; number += 1) {
       const publicToken = await reservePublicToken(tx);
@@ -104,45 +137,78 @@ export async function createOrganizationFromOnboarding(
           publicToken,
         },
       });
-      spots.push({
+      spotRows.push({
         id: spot.id,
         number: spot.number,
         displayName: spot.displayName,
         publicToken: spot.publicToken,
-        publicFeedbackPath: publicSpotFeedbackPath(
-          organization.id,
-          spot.publicToken,
-        ),
-        publicFeedbackUrl: publicSpotFeedbackUrl(
-          appOrigin,
-          organization.id,
-          spot.publicToken,
-        ),
       });
     }
 
-    const managerRequested = input.alertRecipient === "manager";
-
-    return {
-      organization: {
-        id: organization.id,
-        name: organization.name,
-        businessType: organization.businessType,
-        spotLabel: organization.spotLabel,
-        publicReviewUrl: organization.publicReviewUrl,
-      },
-      membership: {
-        id: membership.id,
-        role: "ADMIN",
-      },
-      spots,
-      managerInvite: {
-        requested: managerRequested,
-        sent: false,
-        notice: managerRequested
-          ? "Manager details were saved. Email invitations are not sent yet — that requires the manager-invite and Brevo slice."
-          : "Low-rating alerts will go to your admin email once alerting is enabled.",
-      },
-    };
+    return { organization, membership, spotRows };
   });
+
+  const uploadedPaths: string[] = [];
+
+  try {
+    for (const spot of created.spotRows) {
+      const feedbackUrl = publicSpotFeedbackUrl(
+        appOrigin,
+        created.organization.id,
+        spot.publicToken,
+      );
+      const png = await renderQrPngBuffer(feedbackUrl);
+      const storagePath = spotQrStoragePath(
+        created.organization.id,
+        spot.id,
+      );
+      await uploadSpotQrPng(storagePath, png);
+      uploadedPaths.push(storagePath);
+
+      await prisma.spot.update({
+        where: { id: spot.id },
+        data: { qrStoragePath: storagePath },
+      });
+    }
+  } catch {
+    await rollbackOnboardingAttempt(created.organization.id, uploadedPaths);
+    throw new QrPersistenceFailedError();
+  }
+
+  const spots = created.spotRows.map((spot) => {
+    const qrStoragePath = spotQrStoragePath(
+      created.organization.id,
+      spot.id,
+    );
+    return buildOnboardingSpotDto(
+      created.organization.id,
+      { ...spot, qrStoragePath },
+      appOrigin,
+      supabaseProjectUrl,
+    );
+  });
+
+  const managerRequested = input.alertRecipient === "manager";
+
+  return {
+    organization: {
+      id: created.organization.id,
+      name: created.organization.name,
+      businessType: created.organization.businessType,
+      spotLabel: created.organization.spotLabel,
+      publicReviewUrl: created.organization.publicReviewUrl,
+    },
+    membership: {
+      id: created.membership.id,
+      role: "ADMIN",
+    },
+    spots,
+    managerInvite: {
+      requested: managerRequested,
+      sent: false,
+      notice: managerRequested
+        ? "Manager details were saved. Email invitations are not sent yet — that requires the manager-invite and Brevo slice."
+        : "Low-rating alerts will go to your admin email once alerting is enabled.",
+    },
+  };
 }

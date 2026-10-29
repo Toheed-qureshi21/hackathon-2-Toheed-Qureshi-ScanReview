@@ -39,16 +39,18 @@ describe("logout API envelope", () => {
 });
 
 describe("clearAuthSessionQueries", () => {
-  it("removes cached current-user query", () => {
+  it("clears all cached queries including current user", () => {
     const queryClient = new QueryClient();
     queryClient.setQueryData(queryKeys.auth.me, {
       user: { id: "u1", email: "a@b.com", fullName: null },
       membership: null,
       onboardingRequired: true,
     });
+    queryClient.setQueryData(["spots"], [{ id: "s1" }]);
 
     clearAuthSessionQueries(queryClient);
 
     assert.equal(queryClient.getQueryData(queryKeys.auth.me), undefined);
+    assert.equal(queryClient.getQueryData(["spots"]), undefined);
   });
 });

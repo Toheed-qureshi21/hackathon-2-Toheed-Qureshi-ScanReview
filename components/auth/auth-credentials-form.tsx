@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { clearAuthSessionQueries } from "@/lib/auth/query-cache";
 import { queryKeys } from "@/hooks/queries/query-keys";
 import { ApiClientError } from "@/lib/api/api-error";
 import { getAuthMe } from "@/lib/api/auth";
@@ -113,6 +114,7 @@ export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
         }
       }
 
+      clearAuthSessionQueries(queryClient);
       const me = await getAuthMe();
       queryClient.setQueryData(queryKeys.auth.me, me);
 

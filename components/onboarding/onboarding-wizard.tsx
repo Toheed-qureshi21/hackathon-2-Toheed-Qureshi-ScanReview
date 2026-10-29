@@ -199,6 +199,10 @@ export function OnboardingWizard() {
             );
             return;
           }
+          if (err.code === "QR_STORAGE_FAILED") {
+            setFormError(err.message);
+            return;
+          }
           if (err.code === "VALIDATION_ERROR") {
             setFormError(err.message);
             return;

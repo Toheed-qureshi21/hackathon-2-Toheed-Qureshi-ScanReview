@@ -10,10 +10,8 @@ import {
   initialsFromLabel,
   roleLabel,
 } from "@/lib/auth/display-name";
-import {
-  LOW_RATING_ALERT_COUNT,
-  mockOrganization,
-} from "@/lib/mocks/dashboard";
+import { LOW_RATING_ALERT_COUNT } from "@/lib/mocks/dashboard";
+import { ApiClientError } from "@/lib/api/api-error";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -27,7 +25,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -120,21 +118,36 @@ function isNavActive(pathname: string, label: string): boolean {
 /** Dashboard chrome aligned with scanreview-design/dashboard.html (UI-only). */
 export function DashboardShell({ children }: DashboardShellProps) {
   const pathname = usePathname();
-  const { data: currentUser, isLoading: userLoading } = useCurrentUser();
+  const router = useRouter();
+  const {
+    data: currentUser,
+    isLoading: userLoading,
+    error: userError,
+  } = useCurrentUser();
   const { globalSearch, setGlobalSearch } = useDashboardSearch();
 
+  useEffect(() => {
+    if (userError instanceof ApiClientError && userError.status === 401) {
+      router.replace("/auth/login");
+    }
+  }, [userError, router]);
+
   const workspaceName =
-    currentUser?.membership?.organization.name ?? mockOrganization.name;
-  const workspaceSubtitle =
-    currentUser?.membership?.organization.name != null
-      ? "Your workspace"
-      : mockOrganization.workspaceSubtitle;
-  const workspaceInitials = initialsFromLabel(workspaceName);
+    currentUser?.membership?.organization.name ??
+    (userLoading ? "…" : "Your business");
+  const workspaceSubtitle = currentUser?.membership
+    ? "Your workspace"
+    : userLoading
+      ? " "
+      : "Complete onboarding to create your workspace";
+  const workspaceInitials = initialsFromLabel(
+    currentUser?.membership?.organization.name ?? "SR",
+  );
 
   const profileName =
     currentUser?.user.fullName?.trim() ||
     currentUser?.user.email?.split("@")[0] ||
-    mockOrganization.name;
+    (userLoading ? "…" : "Account");
   const profileRole = currentUser?.membership
     ? roleLabel(currentUser.membership.role)
     : "Set up your business";

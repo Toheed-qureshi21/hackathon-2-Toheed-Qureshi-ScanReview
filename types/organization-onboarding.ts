@@ -5,6 +5,10 @@ export type OnboardingSpotDto = {
   publicToken: string;
   publicFeedbackPath: string;
   publicFeedbackUrl: string;
+  /** Storage object path in bucket `scanreview-qr-codes`. */
+  qrStoragePath: string;
+  /** Public Supabase Storage URL derived from `qrStoragePath`. */
+  qrImageUrl: string;
 };
 
 export type CreateOrganizationResponse = {

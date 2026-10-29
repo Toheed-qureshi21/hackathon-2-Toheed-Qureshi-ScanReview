@@ -23,13 +23,13 @@ export function DemoReviewPage() {
   if (
     !parsed.context ||
     !Number.isFinite(parsed.rating) ||
-    parsed.rating < 3 ||
+    parsed.rating < 1 ||
     parsed.rating > 5
   ) {
     return (
       <GuestFeedbackInvalid
         title="Review link isn’t ready"
-        message="Open a guest feedback link and choose 3–5 stars to preview the review handoff."
+        message="Open a guest feedback link, choose a star rating, and continue to preview this demo handoff."
       />
     );
   }

@@ -34,8 +34,9 @@ export function GuestReviewHandoff({
         <div className="card guest-card">
           <h1>Turn your visit into a review</h1>
           <p className="hint guest-lead">
-            Phase 7 will add the full AI review drafter here. Your rating was
-            carried from the feedback step (demo flow).
+            Phase 7 will add the full AI review drafter here. Your{" "}
+            {rating >= 3 ? "positive" : "low"} rating was carried from the
+            feedback step (demo flow; no contact details in the URL).
           </p>
           {note ? (
             <p className="hint">

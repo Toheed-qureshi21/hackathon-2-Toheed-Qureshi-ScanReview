@@ -26,13 +26,13 @@ export function MockIdReviewPage() {
   if (
     !parsed.context ||
     !Number.isFinite(parsed.rating) ||
-    parsed.rating < 3 ||
+    parsed.rating < 1 ||
     parsed.rating > 5
   ) {
     return (
       <GuestFeedbackInvalid
         title="Review link isn’t ready"
-        message="Choose 3–5 stars on the feedback screen to open this demo handoff."
+        message="Choose a star rating on the feedback screen to open this demo handoff."
       />
     );
   }

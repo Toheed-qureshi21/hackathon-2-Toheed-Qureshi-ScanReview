@@ -49,7 +49,7 @@
 | `/accept-invite` | `accept-invite.html` | Not implemented |
 | `/dashboard/onboarding` | `onboarding.html` | Implemented (dashboard shell) |
 | `/dashboard` | `dashboard.html` | Implemented (mock data, QR manager) |
-| `/feedback/demo` (+ PRD-shaped `/feedback/[orgId]/[spotId]`) | `feedback.html` | Implemented (demo QR + mock IDs) |
+| `/feedback/demo` (+ PRD-shaped `/feedback/[orgId]/[spotId]`) | `feedback.html` | Implemented; aligned to reference (Oct 2026) |
 | `/feedback/demo/review` (+ `.../review`) | `review.html` | Handoff stub only (Phase 7) |
 | `/auth/confirm` | PRD only | Not implemented |
 
@@ -153,6 +153,8 @@
 - [x] Verify phone-sized layouts and keyboard operation.
 
 **Exit criteria:** Both low-rating and high-rating guest flows can be demonstrated end to end with local state.
+
+**Verified (Oct 2026):** `npm run lint` and `npm run build` pass; manual checks on `/feedback/demo` and `/feedback/org-bloom-birch/t07` for 1★ skip → review (`rating=1`), 5★ auto-redirect (~1.6s), dual aria-live copy, theme toggle, and keyboard star navigation. **Known deviations:** brand links to `/` (not `#`); `prefers-reduced-motion` skips high-path auto-redirect (Continue remains); contact share adds format validation; global `.btn::after` shimmer on primary buttons; review route remains Phase 7 handoff stub (not full `review.html`).
 
 ## Phase 7 — AI review drafter UI (`review.html`)
 

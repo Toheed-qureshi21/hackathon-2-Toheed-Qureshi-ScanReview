@@ -104,9 +104,9 @@
 - [x] Keep submission simulated and clearly separate from real authentication.
 
 ### Accept invite (`accept-invite.html`)
-- [ ] Reproduce manager invite/password setup layout.
-- [ ] Implement password fields, validation UX, and relevant states.
-- [ ] Do not verify invite tokens or create memberships in this phase.
+- [x] Reproduce manager invite/password setup layout.
+- [x] Implement password fields, validation UX, and relevant states.
+- [x] Do not verify invite tokens or create memberships in this phase.
 
 **Exit criteria:** Authentication and invite screens are visually complete, accessible, responsive, and use local demo behavior only.
 

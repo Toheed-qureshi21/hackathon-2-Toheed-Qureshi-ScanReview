@@ -165,9 +165,6 @@ export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
             ) : (
               <Eye size={18} aria-hidden="true" />
             )}
-            <span className="auth-pw-toggle-label">
-              {showPassword ? "Hide" : "Show"}
-            </span>
           </Button>
         </div>
         {error ? (

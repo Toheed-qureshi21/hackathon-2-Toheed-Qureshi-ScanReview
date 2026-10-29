@@ -192,6 +192,14 @@ a {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  flex: 0 0 auto;
+}
+.nav-desktop {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .nav-menu-wrap {
@@ -199,6 +207,16 @@ a {
   display: flex;
   align-items: center;
   flex: 0 0 auto;
+}
+
+@media (min-width: 768px) {
+  .nav-desktop {
+    display: flex;
+  }
+
+  .nav-menu-wrap {
+    display: none;
+  }
 }
 
 .nav-menu-trigger {
@@ -313,6 +331,13 @@ a {
   min-width: 0;
   flex: 1 1 auto;
   max-width: calc(100% - 3.5rem);
+}
+
+@media (min-width: 768px) {
+  .brand {
+    flex: 0 1 auto;
+    max-width: none;
+  }
 }
 
 .mark {

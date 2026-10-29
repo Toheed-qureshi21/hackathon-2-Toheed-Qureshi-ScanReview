@@ -789,6 +789,21 @@ textarea {
   min-width: 0;
 }
 
+.dashboard-logout-btn {
+  flex-shrink: 0;
+  gap: 0.35rem;
+}
+
+.dashboard-logout-label {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .dashboard-logout-label {
+    display: inline;
+  }
+}
+
 .dashboard-search {
   display: flex;
   align-items: center;

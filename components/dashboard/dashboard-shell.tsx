@@ -1,5 +1,6 @@
 "use client";
 
+import { DashboardLogoutButton } from "@/components/dashboard/dashboard-logout-button";
 import { ThemeToggle } from "@/components/landing/theme-toggle";
 import { useDashboardSearch } from "@/components/dashboard/dashboard-search-context";
 import { BrandLink } from "@/components/ui/brand-link";
@@ -344,6 +345,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
               />
             </label>
             <ThemeToggle />
+            <DashboardLogoutButton
+              onError={(message) => setNavToast(message)}
+            />
           </div>
         </header>
         {navToast ? (

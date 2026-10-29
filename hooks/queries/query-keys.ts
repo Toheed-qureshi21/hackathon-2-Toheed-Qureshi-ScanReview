@@ -10,8 +10,8 @@ export const queryKeys = {
       ["spots", "list", filters ?? {}] as const,
   },
   feedback: {
-    list: (filters?: Record<string, unknown>) =>
-      ["feedback", { filters: filters ?? {} }] as const,
+    list: (filters?: { search?: string }) =>
+      ["feedback", "list", filters ?? {}] as const,
     detail: (feedbackId: string) => ["feedback", feedbackId] as const,
   },
   publicSpot: (organizationId: string, token: string) =>

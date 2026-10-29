@@ -2,17 +2,53 @@
 
 import { RecentFeedbackPanel } from "@/components/dashboard/recent-feedback-panel";
 import { useDashboardSearch } from "@/components/dashboard/dashboard-search-context";
-import { mockRecentFeedback } from "@/lib/mocks/dashboard";
-import { useEffect, useState } from "react";
+import { useCurrentUser } from "@/hooks/queries/use-current-user";
+import { useFeedbackList } from "@/hooks/queries/use-feedback-list";
+import { ApiClientError } from "@/lib/api/api-error";
+import { resolveFeedbackListView } from "@/lib/feedback/feedback-list-view";
+import Link from "next/link";
+import { useDeferredValue } from "react";
 
 export function DashboardFeedbackPage() {
   const { globalSearch } = useDashboardSearch();
-  const [loading, setLoading] = useState(true);
+  const deferredSearch = useDeferredValue(globalSearch);
+  const trimmedSearch = deferredSearch.trim();
 
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 400);
-    return () => window.clearTimeout(t);
-  }, []);
+  const {
+    data: currentUser,
+    isLoading: userLoading,
+    isError: userError,
+    error: userQueryError,
+    refetch: refetchUser,
+  } = useCurrentUser();
+  const hasMembership = Boolean(currentUser?.membership);
+
+  const feedback = useFeedbackList({
+    search: trimmedSearch,
+    enabled: hasMembership,
+  });
+
+  const view = resolveFeedbackListView({
+    userLoading,
+    userError,
+    hasMembership,
+    isLoading: feedback.isLoading,
+    isError: feedback.isError,
+    itemCount: feedback.data?.items.length ?? 0,
+    hasSearch: trimmedSearch.length > 0,
+  });
+
+  const errorMessage =
+    feedback.error instanceof ApiClientError
+      ? feedback.error.message
+      : userQueryError instanceof ApiClientError
+        ? userQueryError.message
+        : "Unable to load feedback.";
+
+  function retry() {
+    void refetchUser();
+    void feedback.refetch();
+  }
 
   return (
     <div className="dashboard-feedback-page">
@@ -23,22 +59,31 @@ export function DashboardFeedbackPage() {
           </div>
           <h1>Recent guest feedback</h1>
           <p className="subtitle">
-            See ratings and comments from demo scans. Use the search bar above
-            to filter this list.
+            Newest ratings and comments from guests at your spots. Use the
+            search bar above to filter this list.
           </p>
         </div>
       </section>
 
-      <RecentFeedbackPanel
-        items={mockRecentFeedback}
-        query={globalSearch}
-        loading={loading}
-        showTitle={false}
-      />
+      {view === "onboarding" ? (
+        <p className="hint" role="status">
+          Complete{" "}
+          <Link href="/dashboard/onboarding">business onboarding</Link> to see
+          guest feedback.
+        </p>
+      ) : (
+        <RecentFeedbackPanel
+          items={feedback.data?.items ?? []}
+          loading={view === "loading"}
+          errorMessage={view === "error" ? errorMessage : null}
+          onRetry={retry}
+          hasSearch={trimmedSearch.length > 0}
+          showTitle={false}
+        />
+      )}
 
       <p className="qr-disclaimer">
-        Dashboard preview · Sample data. Feedback shown here is illustrative
-        until connected to your ScanReview backend.
+        Showing up to 50 most recent ratings for your workspace.
       </p>
     </div>
   );

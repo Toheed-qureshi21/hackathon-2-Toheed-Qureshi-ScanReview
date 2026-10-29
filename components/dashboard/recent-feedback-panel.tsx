@@ -1,10 +1,16 @@
 "use client";
 
-import type { MockFeedbackItem } from "@/lib/mocks/dashboard";
+import { Button } from "@/components/ui/button";
+import { displayFeedbackComment } from "@/lib/feedback/feedback-list-dto";
+import { formatRelativeTimestamp } from "@/lib/feedback/relative-timestamp";
+import type { DashboardFeedbackItem } from "@/types/feedback";
+
 type RecentFeedbackPanelProps = {
-  items: MockFeedbackItem[];
-  query: string;
+  items: DashboardFeedbackItem[];
   loading?: boolean;
+  errorMessage?: string | null;
+  onRetry?: () => void;
+  hasSearch?: boolean;
   /** When false, omit the in-panel title (page provides its own heading). */
   showTitle?: boolean;
 };
@@ -23,20 +29,12 @@ function Stars({ rating }: { rating: number }) {
 
 export function RecentFeedbackPanel({
   items,
-  query,
   loading = false,
+  errorMessage = null,
+  onRetry,
+  hasSearch = false,
   showTitle = true,
 }: RecentFeedbackPanelProps) {
-  const q = query.trim().toLowerCase();
-  const filtered = q
-    ? items.filter(
-        (item) =>
-          item.spotName.toLowerCase().includes(q) ||
-          item.comment.toLowerCase().includes(q) ||
-          String(item.rating).includes(q),
-      )
-    : items;
-
   return (
     <section
       id="feedback"
@@ -50,7 +48,7 @@ export function RecentFeedbackPanel({
               Recent guest feedback
             </h2>
             <p className="panel-subtitle">
-              Demo list — ratings and spot names reflect mock data only.
+              Newest ratings for your workspace.
             </p>
           </div>
         </div>
@@ -61,30 +59,55 @@ export function RecentFeedbackPanel({
       )}
       <div className="dash-feedback-body">
         {loading ? (
-          <p className="hint dash-feedback-state">Loading preview…</p>
-        ) : filtered.length === 0 ? (
+          <p className="hint dash-feedback-state">Loading feedback…</p>
+        ) : errorMessage ? (
+          <div className="dash-feedback-empty" role="alert">
+            <strong>Unable to load feedback</strong>
+            <p className="err">{errorMessage}</p>
+            {onRetry ? (
+              <Button type="button" variant="ghost" size="sm" onClick={onRetry}>
+                Try again
+              </Button>
+            ) : null}
+          </div>
+        ) : items.length === 0 ? (
           <div className="dash-feedback-empty" role="status">
-            <strong>No matching feedback</strong>
-            <p className="hint">Try another search or clear the top bar search.</p>
+            {hasSearch ? (
+              <>
+                <strong>No matching feedback</strong>
+                <p className="hint">
+                  Try another search or clear the top bar search.
+                </p>
+              </>
+            ) : (
+              <>
+                <strong>No feedback yet</strong>
+                <p className="hint">
+                  Guest ratings for your spots will appear here.
+                </p>
+              </>
+            )}
           </div>
         ) : (
           <ul className="dash-feedback-list">
-            {filtered.map((item) => (
+            {items.map((item) => (
               <li key={item.id}>
                 <div className="dash-feedback-row">
                   <Stars rating={item.rating} />
                   <div className="dash-feedback-copy">
                     <p className="dash-feedback-spot">
-                      <strong>{item.spotName}</strong>
+                      <strong>{item.spotDisplayName}</strong>
                       <span className="hint"> · {item.spotLabel}</span>
                     </p>
-                    <p className="dash-feedback-comment">{item.comment}</p>
+                    <p className="dash-feedback-comment">
+                      {displayFeedbackComment(item.comment)}
+                    </p>
                   </div>
                   <time
                     className="dash-feedback-time hint"
                     dateTime={item.createdAt}
                   >
-                    {item.timestampLabel}
+                    {formatRelativeTimestamp(item.createdAt)}
                   </time>
                 </div>
               </li>

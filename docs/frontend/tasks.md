@@ -218,7 +218,8 @@ This phase is intentionally deferred until the UI is reviewed and approved.
 - [x] Connect Axios/React Query for **spots list** (`GET /api/spots`, `useSpots`, dashboard QR manager). *(Oct 2026)*
 - [x] Connect Axios/React Query for **public guest spot + feedback** (`GET /api/public/spot`, `POST /api/public/feedback`). *(Oct 2026)*
 - [x] Connect Axios/React Query for **public review drafts** (`POST /api/public/reviews/draft`, `useGenerateReviewDraft`). *(Oct 2026)*
-- [ ] Connect Axios/React Query for organization read/update, dashboard feedback list, and invites.
+- [x] Connect Axios/React Query for **dashboard feedback list** (`GET /api/feedback`, `useFeedbackList`, `/dashboard/feedback` loading/empty/error + server search). *(Oct 2026)*
+- [ ] Connect Axios/React Query for organization read/update and invites.
 - [ ] Use mutation responses to update React Query cache directly where possible; invalidate only affected data when a safe direct update is not possible.
 - [ ] Implement QR token generation and invite acceptance. *(Gemini review drafts: production token routes call `POST /api/public/reviews/draft`; `/feedback/demo/review` stays local templates. Oct 2026. Brevo alerts: Phase 6.)*
 - [ ] Add server-side Zod validation, abuse controls, integration tests, and end-to-end tests.

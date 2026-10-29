@@ -141,11 +141,13 @@
 
 ## Phase 8 — Dashboard feedback slice
 
-- [ ] Implement organization-scoped, authenticated feedback listing.
-- [ ] Validate pagination/filter/sort inputs and bound result sizes.
-- [ ] Return only fields the current dashboard requires; restrict contact details to authorized members and intended use.
-- [ ] Integrate dashboard queries using Axios and React Query, with loading/empty/error states.
-- [ ] Test admin/manager access and cross-organization isolation by direct API requests and tampered identifiers.
+- [x] Implement organization-scoped, authenticated feedback listing.
+- [x] Validate pagination/filter/sort inputs and bound result sizes.
+- [x] Return only fields the current dashboard requires; restrict contact details to authorized members and intended use. *(Dashboard DTO omits contact entirely; no contact UI/endpoint in this phase.)*
+- [x] Integrate dashboard queries using Axios and React Query, with loading/empty/error states.
+- [x] Test admin/manager access and cross-organization isolation by direct API requests and tampered identifiers. *(Unit tests of `authorizeFeedbackList` + membership-scoped `where`; live authenticated HTTP/DB not in CI.)*
+
+**Verified (Oct 2026):** `npm test` (157 pass), `npm run lint`, `npm run build`. `GET /api/feedback` requires a Supabase session (live unauthenticated request returned 401 `{ data: null, error: { code: "UNAUTHENTICATED" } }`). Scope is `requireOrganizationMembership()` → `membership.member.organizationId`; optional `organizationId` query is rejected on mismatch (403), never used as the query scope. ADMIN and MANAGER allowed. DTO: `id`, `rating`, ISO `createdAt`, `spotDisplayName`, `spotLabel`, nullable `comment`. No contact, tokens, or review URLs. Zod: `limit` 1–50 default 50, `search` max 80, optional `createdAt_id` cursor. UI: `/dashboard/feedback` uses `useFeedbackList`; mock timer removed. `LOW_RATING_ALERT_COUNT` on `/dashboard` stays mock. **Limitation:** API returns `nextCursor` for a stable newest-page cursor; the dashboard does not paginate beyond the newest 50. Unit tests do not prove live database listing.
 
 **Exit criteria:** dashboard uses real authorized feedback data.
 

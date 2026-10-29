@@ -113,13 +113,15 @@
 
 ## Phase 6 — Low-rating Brevo alert slice
 
-- [ ] Implement server-only Brevo adapter and validate its environment config.
-- [ ] Resolve recipient from trusted organization settings/membership; never accept arbitrary recipient email from a guest request.
-- [ ] Attempt an alert only for ratings 1–2; include organization, dynamic spot label, rating, timestamp and permitted comment.
-- [ ] Do not block guest continuation if email delivery fails. Persist feedback separately from email outcome.
-- [ ] Decide and implement safe failure logging/retry visibility without logging secrets or unnecessary contact details.
-- [ ] Integrate alert status/feedback UI only if the existing product design exposes it.
-- [ ] Test provider success/failure and confirm ratings 3–5 never trigger alert email.
+- [x] Implement server-only Brevo adapter and validate its environment config (`BREVO_API_KEY`, `BREVO_SENDER_EMAIL`).
+- [x] Resolve recipient from trusted organization settings/membership; never accept arbitrary recipient email from a guest request.
+- [x] Attempt an alert only for ratings 1–2; include organization, dynamic spot label, rating, timestamp and permitted comment.
+- [x] Do not block guest continuation if email delivery fails. Persist feedback separately from email outcome.
+- [x] Decide and implement safe failure logging/retry visibility without logging secrets or unnecessary contact details. *(Best-effort `console.info` with `feedbackId` + status only; no outbox/retries.)*
+- [x] Integrate alert status/feedback UI only if the existing product design exposes it. *(No guest/dashboard UI — design does not expose delivery status.)*
+- [x] Test provider success/failure and confirm ratings 3–5 never trigger alert email. *(Unit tests with mocked fetch; no live Brevo send.)*
+
+**Verified (Oct 2026):** `npm test` (101 pass), `npm run lint`, `npm run build` (includes TypeScript). After `prisma.feedback.create`, ratings 1–2 attempt Brevo `POST https://api.brevo.com/v3/smtp/email`; 3–5 never call the adapter. Recipient: `MANAGER_PENDING` → valid `pendingManagerEmail`, else unique admin `Member.alertEmail`; `ADMIN` → unique admin `alertEmail` only (never an arbitrary member or guest address). Contact-sharing second POST skips a duplicate alert. Missing config/recipient logs `skipped_unconfigured` / `skipped_no_recipient` and still returns 201. Guest contact is omitted from email. Provider mocked in unit tests — **no live Brevo send**. **Limitation:** best-effort delivery does not retry after process termination or provider outages. Contact share creates a second `Feedback` row (existing POST contract); alerts are skipped on that row rather than attaching contact to the original rating.
 
 **Exit criteria:** low ratings trigger an alert attempt to the right recipient, while provider failure is handled safely.
 

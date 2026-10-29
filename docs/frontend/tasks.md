@@ -219,6 +219,6 @@ This phase is intentionally deferred until the UI is reviewed and approved.
 - [x] Connect Axios/React Query for **public guest spot + feedback** (`GET /api/public/spot`, `POST /api/public/feedback`). *(Oct 2026)*
 - [ ] Connect Axios/React Query for organization read/update, dashboard feedback list, invites, and review draft APIs.
 - [ ] Use mutation responses to update React Query cache directly where possible; invalidate only affected data when a safe direct update is not possible.
-- [ ] Implement QR token generation, feedback persistence, Brevo alerts, Gemini draft generation, and invite acceptance.
+- [ ] Implement QR token generation, Gemini draft generation, and invite acceptance. *(Brevo low-rating alerts: server-side after persist, Phase 6 Oct 2026 — no guest/dashboard delivery UI; existing public feedback mutation unchanged.)*
 - [ ] Add server-side Zod validation, abuse controls, integration tests, and end-to-end tests.
 - [ ] Replace mock data only after the corresponding API is ready and tested.

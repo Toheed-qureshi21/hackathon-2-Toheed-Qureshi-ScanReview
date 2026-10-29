@@ -1,9 +1,11 @@
 import { apiGet, apiPost } from "@/lib/api/client";
 import type {
   PublicFeedbackDto,
+  PublicReviewDraftDto,
   PublicSpotDto,
 } from "@/types/public-feedback";
 import type { CreatePublicFeedbackBody } from "@/lib/validations/public-feedback";
+import type { CreatePublicReviewDraftBody } from "@/lib/validations/public-review-draft";
 
 export async function getPublicSpot(input: {
   organizationId: string;
@@ -20,4 +22,10 @@ export async function postPublicFeedback(
   body: CreatePublicFeedbackBody,
 ): Promise<PublicFeedbackDto> {
   return apiPost<PublicFeedbackDto>("/public/feedback", body);
+}
+
+export async function postPublicReviewDraft(
+  body: CreatePublicReviewDraftBody,
+): Promise<PublicReviewDraftDto> {
+  return apiPost<PublicReviewDraftDto>("/public/reviews/draft", body);
 }

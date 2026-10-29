@@ -10,3 +10,8 @@ export function isHighRating(rating: number): boolean {
 export function shouldPersistGuestRating(demo: boolean): boolean {
   return !demo;
 }
+
+/** Demo marketing URLs must never call Gemini. Use local templates instead. */
+export function shouldGenerateReviewDraftLocally(demo: boolean): boolean {
+  return demo;
+}

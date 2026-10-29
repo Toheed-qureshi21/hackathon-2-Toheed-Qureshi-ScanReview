@@ -9,3 +9,7 @@ export type PublicFeedbackDto = {
   rating: number;
   createdAt: string;
 };
+
+export type PublicReviewDraftDto = {
+  draft: string;
+};

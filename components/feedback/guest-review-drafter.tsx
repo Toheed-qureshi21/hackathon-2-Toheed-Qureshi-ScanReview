@@ -2,11 +2,14 @@
 
 import { GuestFeedbackHeader } from "@/components/feedback/guest-feedback-header";
 import { Button } from "@/components/ui/button";
+import { useGenerateReviewDraft } from "@/hooks/mutations/use-generate-review-draft";
+import { ApiClientError } from "@/lib/api/api-error";
 import {
   composeDemoReviewDraft,
   REVIEW_HIGHLIGHT_KEYS,
   type ReviewHighlightKey,
 } from "@/lib/feedback/demo-review-draft";
+import { shouldGenerateReviewDraftLocally } from "@/lib/feedback/guest-submit-flow";
 import { isPublicReviewUrl } from "@/lib/feedback/public-review-url";
 import type { GuestFeedbackContext } from "@/lib/mocks/guest-feedback";
 import { cn } from "@/lib/utils";
@@ -63,6 +66,8 @@ export function GuestReviewDrafter({
   const typeTimerRef = useRef<number | null>(null);
 
   const reducedMotion = usePrefersReducedMotion();
+  const generateDraft = useGenerateReviewDraft();
+  const useLocalDraft = shouldGenerateReviewDraftLocally(context.demo);
   const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
   const postUrl = isPublicReviewUrl(context.reviewUrl)
     ? context.reviewUrl.trim()
@@ -124,14 +129,30 @@ export function GuestReviewDrafter({
     [reducedMotion, fitDraftHeight],
   );
 
-  const generate = useCallback(() => {
-      setGenError("");
-      setCopyError("");
-      setPhase("loading");
+  const revealDraft = useCallback(
+    (text: string, nextVariant: number) => {
+      setVariant(nextVariant);
+      setPhase("ready");
+      runTypewriter(text);
+      requestAnimationFrame(() => {
+        outRef.current?.scrollIntoView({
+          behavior: reducedMotion ? "auto" : "smooth",
+          block: "nearest",
+        });
+      });
+    },
+    [reducedMotion, runTypewriter],
+  );
 
+  const generate = useCallback(async () => {
+    setGenError("");
+    setCopyError("");
+    setPhase("loading");
+    const nextVariant = variant + 1;
+
+    if (useLocalDraft) {
       window.setTimeout(() => {
         try {
-          const nextVariant = variant + 1;
           const text = composeDemoReviewDraft({
             orgName: context.orgName,
             rating,
@@ -142,23 +163,48 @@ export function GuestReviewDrafter({
           if (!text.trim()) {
             throw new Error("empty");
           }
-          setVariant(nextVariant);
-          setPhase("ready");
-          runTypewriter(text);
-          requestAnimationFrame(() => {
-            outRef.current?.scrollIntoView({
-              behavior: reducedMotion ? "auto" : "smooth",
-              block: "nearest",
-            });
-          });
+          revealDraft(text, nextVariant);
         } catch {
           setGenError("Could not build a demo draft. Try again.");
           setPhase("error");
         }
       }, GENERATE_MS);
-    },
-    [context.orgName, rating, picks, extraComment, variant, runTypewriter, reducedMotion],
-  );
+      return;
+    }
+
+    try {
+      const result = await generateDraft.mutateAsync({
+        organizationId: context.orgId,
+        token: context.spotId,
+        rating,
+        comment: extraComment.trim() || null,
+        highlights: [...picks],
+      });
+      const text = result.draft.trim();
+      if (!text) {
+        throw new Error("empty");
+      }
+      revealDraft(text, nextVariant);
+    } catch (err) {
+      const message =
+        err instanceof ApiClientError
+          ? err.message
+          : "Could not write a draft. Try again.";
+      setGenError(message);
+      setPhase("error");
+    }
+  }, [
+    context.orgId,
+    context.orgName,
+    context.spotId,
+    extraComment,
+    generateDraft,
+    picks,
+    rating,
+    revealDraft,
+    useLocalDraft,
+    variant,
+  ]);
 
   function togglePick(key: ReviewHighlightKey) {
     setPicks((prev) => {
@@ -212,7 +258,10 @@ export function GuestReviewDrafter({
     setDisplayDraft(next);
   }
 
-  const showOutput = phase === "ready" || (phase === "loading" && variant >= 1);
+  const showOutput =
+    phase === "ready" ||
+    (phase === "loading" && variant >= 1) ||
+    (phase === "error" && variant >= 1);
   const writing = phase === "loading";
 
   return (
@@ -237,9 +286,11 @@ export function GuestReviewDrafter({
           <p className="hint guest-lead">
             Pick what stood out and we’ll write a draft. You can edit every word.
           </p>
-          <p className="hint guest-demo-tag">
-            Demo: drafts are built locally from templates — not AI.
-          </p>
+          {useLocalDraft ? (
+            <p className="hint guest-demo-tag">
+              Demo: drafts are built locally from templates — not AI.
+            </p>
+          ) : null}
 
           <span className="guest-review-label" id={chipsId}>
             What stood out?

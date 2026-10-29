@@ -127,13 +127,15 @@
 
 ## Phase 7 — Gemini review-draft slice
 
-- [ ] Implement server-only Gemini adapter using the installed `@google/genai` version.
-- [ ] Validate rating/comment and bound input/output size. Treat guest comments as untrusted data, not instructions.
-- [ ] Generate grounded draft text without inventing visit details.
-- [ ] Add timeout/provider-error/rate-limit handling and public abuse controls.
-- [ ] Resolve review URL from trusted spot/organization context; show post link only for a valid configured HTTPS URL.
-- [ ] Integrate the draft API with editable text/copy UI. The application must never publish a review automatically.
-- [ ] Test empty comment, provider failures, invalid token, prompt-injection-like comments, output limits and link visibility.
+- [x] Implement server-only Gemini adapter using the installed `@google/genai` version. *(`@google/genai` 2.32.0; model `gemini-2.5-flash` — no silent substitute.)*
+- [x] Validate rating/comment and bound input/output size. Treat guest comments as untrusted data, not instructions.
+- [x] Generate grounded draft text without inventing visit details.
+- [x] Add timeout/provider-error/rate-limit handling and public abuse controls. *(~5/token and ~15/IP per 10 minutes, process-local; not shared across Vercel isolates.)*
+- [x] Resolve review URL from trusted spot/organization context; show post link only for a valid configured HTTPS URL.
+- [x] Integrate the draft API with editable text/copy UI. The application must never publish a review automatically.
+- [x] Test empty comment, provider failures, invalid token, prompt-injection-like comments, output limits and link visibility. *(Unit tests with mocked generateContent; no live Gemini call.)*
+
+**Verified (Oct 2026):** `npm test` (125 pass), `npm run lint`, `npm run build` (TypeScript included). `POST /api/public/reviews/draft` resolves token + organization ID, then calls Gemini. Ratings 1–5 and empty comments are allowed. Highlight chips are hints only. Drafter comment is ephemeral (not persisted). `/feedback/demo/review` stays on local templates. Missing key / timeout / malformed output / model-unavailable → guest-safe 503; never substitutes another model. **Limitation:** mocked tests do not prove live Gemini generation. Rate limits are process-local.
 
 **Exit criteria:** every rating can produce an editable draft; guest remains responsible for posting.
 

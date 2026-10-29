@@ -1,6 +1,16 @@
 import { jsonError, jsonSuccess } from "@/lib/api/response";
+import { authorizeAdminMembership } from "@/lib/auth/admin-access";
 import { requireOrganizationMembership } from "@/lib/auth/membership";
+import {
+  createAdditionalSpot,
+  QrPersistenceFailedError,
+  SpotLimitReachedError,
+} from "@/lib/services/create-spot";
 import { listSpotsForOrganization } from "@/lib/services/spots-list";
+import {
+  createSpotBodySchema,
+  resolveCreateSpotOrganizationId,
+} from "@/lib/validations/create-spot";
 import { listSpotsQuerySchema } from "@/lib/validations/spots-query";
 
 export async function GET(request: Request) {
@@ -44,30 +54,61 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   const membership = await requireOrganizationMembership();
-  if (!membership.ok) {
-    if (membership.reason === "unauthenticated") {
-      return jsonError("UNAUTHENTICATED", "Sign in to continue.", 401);
+  const access = authorizeAdminMembership(membership, {
+    forbiddenMessage: "Managers cannot create or change spots.",
+  });
+  if (!access.ok) {
+    return jsonError(access.code, access.message, access.status);
+  }
+
+  let raw: unknown = {};
+  const text = await request.text();
+  if (text.trim()) {
+    try {
+      raw = JSON.parse(text) as unknown;
+    } catch {
+      return jsonError("INVALID_JSON", "Request body must be valid JSON.", 400);
+    }
+  }
+  if (raw === null) {
+    raw = {};
+  }
+
+  const parsed = createSpotBodySchema.safeParse(raw);
+  if (!parsed.success) {
+    return jsonError(
+      "VALIDATION_ERROR",
+      "Invalid request body.",
+      422,
+      { issues: parsed.error.flatten() },
+    );
+  }
+
+  const organizationId = resolveCreateSpotOrganizationId(
+    access.organizationId,
+    raw,
+  );
+
+  try {
+    const data = await createAdditionalSpot(organizationId);
+    return jsonSuccess(data, 201);
+  } catch (error) {
+    if (error instanceof SpotLimitReachedError) {
+      return jsonError(error.code, error.message, error.status);
+    }
+    if (error instanceof QrPersistenceFailedError) {
+      return jsonError(
+        "QR_STORAGE_FAILED",
+        "The QR code could not be saved. Try again.",
+        500,
+      );
     }
     return jsonError(
-      "FORBIDDEN",
-      "Complete onboarding to manage spots.",
-      403,
+      "INTERNAL_ERROR",
+      "Unable to create a QR code right now.",
+      500,
     );
   }
-
-  if (membership.member.role === "MANAGER") {
-    return jsonError(
-      "FORBIDDEN",
-      "Managers cannot create or change spots.",
-      403,
-    );
-  }
-
-  return jsonError(
-    "NOT_IMPLEMENTED",
-    "Adding spots after onboarding is not available yet.",
-    501,
-  );
 }

@@ -17,3 +17,17 @@ export type SpotsListResponse = {
   };
   spots: SpotListItem[];
 };
+
+export type CreatedSpotItem = SpotListItem & {
+  qrStoragePath: string;
+  qrImageUrl: string;
+};
+
+export type CreateSpotResponse = {
+  organization: {
+    id: string;
+    name: string;
+    spotLabel: string;
+  };
+  spot: CreatedSpotItem;
+};

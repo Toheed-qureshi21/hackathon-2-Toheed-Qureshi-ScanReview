@@ -87,17 +87,15 @@
 ## Phase 4 — Spots and QR codes slice
 
 - [x] Implement authorized spot listing and QR payload retrieval/generation (`GET /api/spots`).
-- [x] Ensure admin-only spot creation/settings changes and manager read-only restrictions (`POST /api/spots` returns `501` for admins, `403` for managers).
+- [x] Ensure admin-only spot creation/settings changes and manager read-only restrictions (`POST /api/spots` returns `201` for admins, `403` for managers). Organization settings editing is still not implemented.
 - [x] Enforce manager read-only restrictions (`POST /api/spots` returns `403` for managers).
-
-- [ ] Implement admin-only additional spot creation through `POST /api/spots`, reusing the existing QR generation and Supabase Storage flow, with the 50-spot limit enforced server-side.
-
-- [ ] Test spot creation, authorization, the 50-spot limit, storage failures, and the generated QR's feedback URL.
+- [x] Implement admin-only additional spot creation through `POST /api/spots`, reusing the existing QR generation and Supabase Storage flow, with the 50-spot limit enforced server-side.
+- [x] Test spot creation, authorization, the 50-spot limit, storage failures, and the generated QR's feedback URL. *(Unit tests; live authenticated create/Storage not in CI.)*
 - [x] Build public URLs from a configured trusted application origin, not an untrusted `Host` header.
 - [x] Integrate dashboard QR preview/print/download with real spot data (Storage `qrImageUrl`).
 - [x] Test spot DTO URLs, missing QR path, query validation, and documented auth expectations. *(No live Supabase/DB HTTP integration in CI.)*
 
-**Verified (Oct 2026):** Dashboard QR manager uses `useSpots` + persisted PNGs; no client QR regeneration for listed spots.
+**Verified (Oct 2026):** Dashboard QR manager uses `useSpots` + persisted PNGs; no client QR regeneration for listed spots. `POST /api/spots` creates one additional spot for ADMIN only: membership org scope, next number from configured `spotLabel` (including custom labels), unique public token, trusted `APP_URL` feedback URL, reused PNG + `scanreview-qr-codes` upload. 50-spot cap enforced with `Organization` `FOR UPDATE` + Serializable transaction. Live unauthenticated POST returned 401 `{ data: null, error: { code: "UNAUTHENTICATED" } }`. **Migration:** none — existing unique `(organizationId, number)` and `publicToken` constraints are sufficient. **Limitation:** unit tests mock storage/DB writes; an authenticated admin session was not available to scan a newly created QR in the browser.
 
 **Exit criteria:** the dashboard shows the correct persisted spots and their public QR links.
 

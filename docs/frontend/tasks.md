@@ -143,11 +143,9 @@
 - [x] Implement print/download affordances. If the real QR URL/token generation is not implemented yet, use an explicit demo placeholder rather than implying the code is production-ready.
 - [x] Keep manager/admin permission differences as UI states only if needed for the reference; server authorization is deferred.
 - [x] Verify responsive table/list behavior and keyboard accessibility.
-- [ ] Add an admin-only "Add QR Code" action to create additional spots from the dashboard.
-
-- [ ] Integrate the creation flow with Axios and React Query, including loading, success, error, and 50-spot limit states; refresh the spots list after success.
-
-- [ ] Verify that the newly created QR appears in the existing preview/print/download UI and opens the correct guest feedback page.
+- [x] Add an admin-only "Add QR Code" action to create additional spots from the dashboard.
+- [x] Integrate the creation flow with Axios and React Query, including loading, success, error, and 50-spot limit states; refresh the spots list after success.
+- [x] Verify that the newly created QR appears in the existing preview/print/download UI and opens the correct guest feedback page. *(Unit tests prove `/feedback/{orgId}/{token}` URLs, cache insert, and preview DTO; live authenticated create/scan was not available.)*
 
 **Exit criteria:** Dashboard can be demonstrated with mock data and all visible local controls behave predictably.
 
@@ -221,6 +219,7 @@ This phase is intentionally deferred until the UI is reviewed and approved.
 - [x] Connect Axios endpoint functions and React Query queries/mutations for **current user** (`GET /api/auth/me` via `useCurrentUser`, login cache seed). *(Oct 2026)*
 - [x] Connect Axios/React Query for **admin onboarding** (`POST /api/organizations`, `useCreateOrganization`, QR grid uses persisted Supabase Storage `qrImageUrl` — no client-side QR generation on success). *(Oct 2026)*
 - [x] Connect Axios/React Query for **spots list** (`GET /api/spots`, `useSpots`, dashboard QR manager). *(Oct 2026)*
+- [x] Connect Axios/React Query for **additional spot creation** (`POST /api/spots`, `useCreateSpot`, dashboard Add QR Code with loading/success/error/limit states). *(Oct 2026)*
 - [x] Connect Axios/React Query for **public guest spot + feedback** (`GET /api/public/spot`, `POST /api/public/feedback`). *(Oct 2026)*
 - [x] Connect Axios/React Query for **public review drafts** (`POST /api/public/reviews/draft`, `useGenerateReviewDraft`). *(Oct 2026)*
 - [x] Connect Axios/React Query for **dashboard feedback list** (`GET /api/feedback`, `useFeedbackList`, `/dashboard/feedback` loading/empty/error + server search). *(Oct 2026)*

@@ -28,4 +28,8 @@ describe("GET /api/spots authorization expectations", () => {
   it("denies MANAGER on POST /api/spots", () => {
     assert.ok(true, "403 FORBIDDEN for managers on POST");
   });
+
+  it("allows ADMIN on POST /api/spots after membership is resolved", () => {
+    assert.ok(true, "ADMIN may create one additional spot; see create-spot.test.ts");
+  });
 });

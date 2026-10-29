@@ -3,9 +3,17 @@
 import { Button } from "@/components/ui/button";
 import { DashboardToast } from "@/components/dashboard/dashboard-toast";
 import { StoredQrImage } from "@/components/dashboard/qr-code-visual";
+import { useCreateSpot } from "@/hooks/mutations/use-create-spot";
 import { useCurrentUser } from "@/hooks/queries/use-current-user";
 import { useSpots } from "@/hooks/queries/use-spots";
 import { ApiClientError } from "@/lib/api/api-error";
+import {
+  ADD_SPOT_LIMIT_MESSAGE,
+  addSpotErrorMessage,
+  addSpotSuccessMessage,
+  canAddSpot,
+  isAtSpotLimit,
+} from "@/lib/dashboard/add-spot-action";
 import { LOW_RATING_ALERT_COUNT } from "@/lib/mocks/dashboard";
 import type { SpotListItem } from "@/types/spot";
 import { cn } from "@/lib/utils";
@@ -56,13 +64,14 @@ export function QrManagerView() {
   );
   const org = spotsPayload?.organization;
 
+  const createSpot = useCreateSpot();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
-  const [modalOpen, setModalOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -106,13 +115,39 @@ export function QrManagerView() {
     [spots],
   );
 
-  function openCreateModal() {
+  const atLimit = isAtSpotLimit(spots.length);
+  const canCreate = canAddSpot({
+    isAdmin,
+    spotCount: spots.length,
+    isPending: createSpot.isPending,
+  });
+
+  async function handleAddQrCode() {
     if (!isAdmin) {
-      showToast("Managers cannot create or change spots.");
+      const message = "Managers cannot create or change spots.";
+      setActionError(message);
+      showToast(message);
       return;
     }
-    showToast("Adding spots after onboarding is not available yet.");
-    setModalOpen(false);
+    if (atLimit) {
+      setActionError(ADD_SPOT_LIMIT_MESSAGE);
+      showToast(ADD_SPOT_LIMIT_MESSAGE);
+      return;
+    }
+
+    setActionError(null);
+    try {
+      const result = await createSpot.mutateAsync();
+      setSelectedId(result.spot.id);
+      setSearch("");
+      setStatusFilter("all");
+      setPage(Math.max(1, Math.ceil((spots.length + 1) / PER_PAGE)));
+      showToast(addSpotSuccessMessage(result.spot.displayName));
+    } catch (error) {
+      const message = addSpotErrorMessage(error);
+      setActionError(message);
+      showToast(message);
+    }
   }
 
   async function downloadSelectedQr() {
@@ -232,11 +267,34 @@ export function QrManagerView() {
             <Button type="button" variant="ghost" onClick={exportCsv}>
               Export list
             </Button>
-            <Button type="button" onClick={openCreateModal} disabled={!isAdmin}>
-              Create QR code
+            <Button
+              type="button"
+              onClick={() => void handleAddQrCode()}
+              disabled={!canCreate}
+              aria-busy={createSpot.isPending}
+              title={
+                !isAdmin
+                  ? "Only an admin can add QR codes."
+                  : atLimit
+                    ? ADD_SPOT_LIMIT_MESSAGE
+                    : undefined
+              }
+            >
+              {createSpot.isPending ? "Adding…" : "Add QR Code"}
             </Button>
           </div>
         </section>
+
+        {atLimit && isAdmin ? (
+          <p className="hint" role="status">
+            {ADD_SPOT_LIMIT_MESSAGE}
+          </p>
+        ) : null}
+        {actionError ? (
+          <p className="err" role="alert">
+            {actionError}
+          </p>
+        ) : null}
 
         <section className="qr-stats" aria-label="QR code summary">
           {isLoading ? (
@@ -289,10 +347,13 @@ export function QrManagerView() {
               <Button
                 type="button"
                 className="qr-white-btn"
-                onClick={openCreateModal}
-                disabled={!isAdmin}
+                onClick={() => void handleAddQrCode()}
+                disabled={!canCreate}
+                aria-busy={createSpot.isPending}
               >
-                Create a {spotLabel.toLowerCase()} code ↗
+                {createSpot.isPending
+                  ? "Adding…"
+                  : `Create a ${spotLabel.toLowerCase()} code ↗`}
               </Button>
             </div>
           </div>
@@ -365,9 +426,20 @@ export function QrManagerView() {
                   <strong>No matching QR codes</strong>
                   <p className="hint">
                     {spots.length === 0
-                      ? "No spots yet. Finish onboarding to create your first codes."
+                      ? isAdmin
+                        ? "No spots yet. Add a QR code to create the next labeled spot."
+                        : "No spots yet. Ask an admin to add QR codes."
                       : "Try another search or clear your filters."}
                   </p>
+                  {spots.length === 0 && isAdmin ? (
+                    <Button
+                      type="button"
+                      onClick={() => void handleAddQrCode()}
+                      disabled={!canCreate}
+                    >
+                      {createSpot.isPending ? "Adding…" : "Add QR Code"}
+                    </Button>
+                  ) : null}
                   {spots.length > 0 ? (
                     <Button
                       type="button"
@@ -545,32 +617,6 @@ export function QrManagerView() {
           feedback counts remain demo until the feedback API is connected.
         </p>
       </div>
-
-      {modalOpen ? (
-        <div
-          className="qr-modal open"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="qr-modal-title"
-        >
-          <div className="qr-modal-card">
-            <div className="qr-modal-head">
-              <div>
-                <h2 id="qr-modal-title">Create a QR code</h2>
-                <p>Not available in this release.</p>
-              </div>
-              <button
-                type="button"
-                className="qr-modal-close"
-                aria-label="Close dialog"
-                onClick={() => setModalOpen(false)}
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       <DashboardToast message={toast} />
     </>

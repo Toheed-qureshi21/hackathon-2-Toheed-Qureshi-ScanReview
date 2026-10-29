@@ -6,6 +6,7 @@ export const queryKeys = {
     current: ["organization", "current"] as const,
   },
   spots: {
+    all: ["spots"] as const,
     list: (filters?: { search?: string }) =>
       ["spots", "list", filters ?? {}] as const,
   },

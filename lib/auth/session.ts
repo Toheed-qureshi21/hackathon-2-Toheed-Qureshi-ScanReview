@@ -22,6 +22,7 @@ export async function getAuthenticatedUser(): Promise<SessionResult> {
       id: data.user.id,
       email: data.user.email,
       user_metadata: data.user.user_metadata,
+      app_metadata: data.user.app_metadata,
     },
   };
 }

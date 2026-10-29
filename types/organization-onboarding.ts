@@ -26,7 +26,8 @@ export type CreateOrganizationResponse = {
   spots: OnboardingSpotDto[];
   managerInvite: {
     requested: boolean;
-    sent: false;
+    sent: boolean;
+    email: string | null;
     notice: string;
   };
 };

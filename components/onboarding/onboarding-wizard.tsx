@@ -14,6 +14,7 @@ import {
   type LabelPreset,
 } from "@/lib/onboarding/constants";
 import { useCreateOrganization } from "@/hooks/mutations/use-create-organization";
+import { useInviteManager } from "@/hooks/mutations/use-invite-manager";
 import { ApiClientError } from "@/lib/api/api-error";
 import type { CreateOrganizationBody } from "@/lib/validations/onboarding";
 import type { CreateOrganizationResponse } from "@/types/organization-onboarding";
@@ -111,8 +112,10 @@ export function OnboardingWizard() {
     null,
   );
   const createOrganization = useCreateOrganization();
+  const inviteManager = useInviteManager();
   const router = useRouter();
   const submitting = createOrganization.isPending;
+  const inviting = inviteManager.isPending;
 
   const spotLabelPreview = useMemo(
     () => resolveSpotLabel(labelPreset, customLabel) || "…",
@@ -253,12 +256,61 @@ export function OnboardingWizard() {
               <dt>Alerts</dt>
               <dd>
                 {managerInvite
-                  ? "Manager (invite not sent yet)"
+                  ? result.managerInvite.sent
+                    ? "Manager invite sent"
+                    : "Manager (invite not sent)"
                   : "Just me (admin)"}
               </dd>
             </div>
           </dl>
         </div>
+        {managerInvite && !result.managerInvite.sent ? (
+          <div className="acts noprint">
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={inviting || !managerName.trim() || !managerEmail.trim()}
+              aria-busy={inviting}
+              onClick={() => {
+                inviteManager.mutate(
+                  {
+                    managerName: managerName.trim(),
+                    managerEmail: managerEmail.trim(),
+                  },
+                  {
+                    onSuccess: (data) => {
+                      setResult((current) =>
+                        current
+                          ? { ...current, managerInvite: data.managerInvite }
+                          : current,
+                      );
+                    },
+                    onError: (err) => {
+                      const message =
+                        err instanceof ApiClientError
+                          ? err.message
+                          : "The invite could not be sent. Try again.";
+                      setResult((current) =>
+                        current
+                          ? {
+                              ...current,
+                              managerInvite: {
+                                ...current.managerInvite,
+                                sent: false,
+                                notice: message,
+                              },
+                            }
+                          : current,
+                      );
+                    },
+                  },
+                );
+              }}
+            >
+              {inviting ? "Sending invite…" : "Send manager invite"}
+            </Button>
+          </div>
+        ) : null}
         <div className="acts noprint">
           <Button type="button" onClick={() => window.print()}>
             Print codes
@@ -471,8 +523,8 @@ export function OnboardingWizard() {
                 disabled={submitting}
               />
               <p className="hint field-note">
-                We save their name and email for alerts and a future invite.
-                Email invitations are not sent in this release.
+                We’ll email them an invite to set a password and view
+                feedback. Low-rating alerts will go to this address.
               </p>
               {errors.manager ? (
                 <p className="err" role="alert">

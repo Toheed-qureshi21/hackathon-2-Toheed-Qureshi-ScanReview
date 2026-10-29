@@ -30,6 +30,9 @@ model Organization {
   alertRecipient      AlertRecipientMode
   pendingManagerName  String?
   pendingManagerEmail String?
+  inviteSentAt        DateTime?
+  inviteExpiresAt     DateTime?
+  inviteAcceptedAt    DateTime?
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
   members             Member[]

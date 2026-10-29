@@ -45,6 +45,7 @@ describe("clearAuthSessionQueries", () => {
       user: { id: "u1", email: "a@b.com", fullName: null },
       membership: null,
       onboardingRequired: true,
+      pendingManagerInvite: false,
     });
     queryClient.setQueryData(["spots"], [{ id: "s1" }]);
 

@@ -1,9 +1,11 @@
 import type { AuthMeData, AuthMeMembership, AuthMeUser } from "@/types/auth-me";
+import { hasPendingManagerInviteMetadata } from "@/lib/invites/manager-invite-metadata";
 
 export type SupabaseAuthUser = {
   id: string;
   email?: string | null;
   user_metadata?: Record<string, unknown> | null;
+  app_metadata?: Record<string, unknown> | null;
 };
 
 export type MemberRoleLiteral = "ADMIN" | "MANAGER";
@@ -38,11 +40,14 @@ export function buildAuthMeData(
   member: MemberWithOrganizationDto | null,
 ): AuthMeData {
   const mappedUser = mapSupabaseUser(user);
+  const pendingManagerInvite =
+    !member && hasPendingManagerInviteMetadata(user.app_metadata);
   if (!member) {
     return {
       user: mappedUser,
       membership: null,
-      onboardingRequired: true,
+      onboardingRequired: !pendingManagerInvite,
+      pendingManagerInvite,
     };
   }
 
@@ -59,5 +64,6 @@ export function buildAuthMeData(
     user: mappedUser,
     membership,
     onboardingRequired: false,
+    pendingManagerInvite: false,
   };
 }

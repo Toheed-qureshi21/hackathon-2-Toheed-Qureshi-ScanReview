@@ -164,6 +164,21 @@ describe("resolveAlertRecipient", () => {
     if (result.ok) assert.equal(result.email, MANAGER_EMAIL);
   });
 
+  it("prefers an accepted manager alertEmail over pending email", () => {
+    const result = resolveAlertRecipient(
+      {
+        alertRecipient: "MANAGER_PENDING",
+        pendingManagerEmail: "pending@venue.test",
+      },
+      [
+        { role: "ADMIN", alertEmail: ADMIN_EMAIL },
+        { role: "MANAGER", alertEmail: MANAGER_EMAIL },
+      ],
+    );
+    assert.equal(result.ok, true);
+    if (result.ok) assert.equal(result.email, MANAGER_EMAIL);
+  });
+
   it("falls back to admin alertEmail if pending manager email is missing", () => {
     const result = resolveAlertRecipient(
       { alertRecipient: "MANAGER_PENDING", pendingManagerEmail: null },

@@ -26,6 +26,7 @@ describe("buildAuthMeData", () => {
     const data = buildAuthMeData(baseUser, null);
     assert.equal(data.membership, null);
     assert.equal(data.onboardingRequired, true);
+    assert.equal(data.pendingManagerInvite, false);
     assert.equal(data.user.id, "user-1");
   });
 
@@ -36,7 +37,31 @@ describe("buildAuthMeData", () => {
       organization: { id: "org-1", name: "Bloom & Birch Café" },
     });
     assert.equal(data.onboardingRequired, false);
+    assert.equal(data.pendingManagerInvite, false);
     assert.deepEqual(data.membership?.organization.name, "Bloom & Birch Café");
     assert.equal(data.membership?.role, "ADMIN");
+  });
+
+  it("flags a pending manager invite from app_metadata without exposing org ids", () => {
+    const data = buildAuthMeData(
+      {
+        ...baseUser,
+        email: "manager@cafe.test",
+        app_metadata: {
+          organizationId: "11111111-1111-4111-8111-111111111111",
+          role: "MANAGER",
+        },
+        user_metadata: { organizationId: "evil-org", role: "ADMIN" },
+      },
+      null,
+    );
+    assert.equal(data.pendingManagerInvite, true);
+    assert.equal(data.onboardingRequired, false);
+    assert.equal(data.membership, null);
+    assert.equal(JSON.stringify(data).includes("evil-org"), false);
+    assert.equal(
+      JSON.stringify(data).includes("11111111-1111-4111-8111-111111111111"),
+      false,
+    );
   });
 });

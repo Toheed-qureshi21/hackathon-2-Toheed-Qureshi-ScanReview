@@ -5,6 +5,9 @@ export function resolvePostAuthPath(
   me: AuthMeData,
   nextParam: string | null,
 ): string {
+  if (me.pendingManagerInvite && !me.membership) {
+    return "/accept-invite";
+  }
   if (nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")) {
     if (me.membership || nextParam.startsWith("/dashboard/onboarding")) {
       return nextParam;

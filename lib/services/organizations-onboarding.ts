@@ -14,7 +14,12 @@ import {
   uploadSpotQrPng,
 } from "@/lib/storage/qr-code-storage";
 import { spotQrStoragePath } from "@/lib/storage/qr-codes-constants";
+import {
+  inviteManagerForOrganization,
+  ManagerInviteError,
+} from "@/lib/services/manager-invite";
 import type { CreateOrganizationResponse } from "@/types/organization-onboarding";
+import { normalizeManagerEmail } from "@/lib/invites/manager-invite-rules";
 
 export class OrganizationAlreadyExistsError extends Error {
   readonly name = "OrganizationAlreadyExistsError";
@@ -189,6 +194,38 @@ export async function createOrganizationFromOnboarding(
   });
 
   const managerRequested = input.alertRecipient === "manager";
+  const managerEmail = input.managerEmail
+    ? normalizeManagerEmail(input.managerEmail)
+    : null;
+
+  let managerInvite: CreateOrganizationResponse["managerInvite"] = {
+    requested: false,
+    sent: false,
+    email: null,
+    notice: "Low-rating alerts will go to your admin email.",
+  };
+
+  if (managerRequested && managerEmail && input.managerName) {
+    try {
+      managerInvite = await inviteManagerForOrganization({
+        organizationId: created.organization.id,
+        adminEmail: user.email,
+        managerName: input.managerName,
+        managerEmail,
+      });
+    } catch (error) {
+      const notice =
+        error instanceof ManagerInviteError
+          ? error.message
+          : "Manager details were saved, but the invite email could not be sent. You can try again.";
+      managerInvite = {
+        requested: true,
+        sent: false,
+        email: managerEmail,
+        notice,
+      };
+    }
+  }
 
   return {
     organization: {
@@ -203,12 +240,6 @@ export async function createOrganizationFromOnboarding(
       role: "ADMIN",
     },
     spots,
-    managerInvite: {
-      requested: managerRequested,
-      sent: false,
-      notice: managerRequested
-        ? "Manager details were saved. Email invitations are not sent yet — that requires the manager-invite and Brevo slice."
-        : "Low-rating alerts will go to your admin email once alerting is enabled.",
-    },
+    managerInvite,
   };
 }

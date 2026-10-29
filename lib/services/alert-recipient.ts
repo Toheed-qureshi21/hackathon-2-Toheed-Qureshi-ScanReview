@@ -26,13 +26,14 @@ function validEmail(value: string | null | undefined): string | null {
  * Unique administrator `alertEmail`, or null if none / more than one distinct
  * valid address (do not pick an arbitrary member).
  */
-function uniqueAdminAlertEmail(
+function uniqueRoleAlertEmail(
   members: AlertRecipientMember[],
+  role: AlertRecipientMember["role"],
 ): string | null {
   const emails = [
     ...new Set(
       members
-        .filter((member) => member.role === "ADMIN")
+        .filter((member) => member.role === role)
         .map((member) => validEmail(member.alertEmail))
         .filter((email): email is string => email !== null),
     ),
@@ -40,23 +41,36 @@ function uniqueAdminAlertEmail(
   return emails.length === 1 ? emails[0] : null;
 }
 
+function uniqueAdminAlertEmail(
+  members: AlertRecipientMember[],
+): string | null {
+  return uniqueRoleAlertEmail(members, "ADMIN");
+}
+
+function uniqueManagerAlertEmail(
+  members: AlertRecipientMember[],
+): string | null {
+  return uniqueRoleAlertEmail(members, "MANAGER");
+}
+
 /**
  * Trusted alert recipient from organization configuration + membership.
  * Guest-supplied addresses are never considered.
  *
- * 1. MANAGER_PENDING: `Organization.pendingManagerEmail` when valid.
- *    Safe fallback: unique admin `Member.alertEmail` (product: alert the
- *    manager, or the admin if no manager email is available yet).
+ * 1. MANAGER_PENDING: unique accepted MANAGER `alertEmail` when present;
+ *    otherwise `Organization.pendingManagerEmail`; otherwise unique admin
+ *    `Member.alertEmail`. Enum stays MANAGER_PENDING after invite accept.
  * 2. ADMIN: unique administrator `Member.alertEmail` only.
  *
- * MANAGER members are ignored until invite acceptance changes membership
- * and recipient configuration (Phase 9). Never pick an arbitrary member.
+ * Never pick an arbitrary member or a guest-supplied address.
  */
 export function resolveAlertRecipient(
   organization: AlertRecipientOrganization,
   members: AlertRecipientMember[],
 ): AlertRecipientResult {
   if (organization.alertRecipient === "MANAGER_PENDING") {
+    const acceptedManager = uniqueManagerAlertEmail(members);
+    if (acceptedManager) return { ok: true, email: acceptedManager };
     const pending = validEmail(organization.pendingManagerEmail);
     if (pending) return { ok: true, email: pending };
     const adminFallback = uniqueAdminAlertEmail(members);

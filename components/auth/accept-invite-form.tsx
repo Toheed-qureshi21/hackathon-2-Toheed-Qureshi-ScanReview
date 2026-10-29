@@ -1,33 +1,31 @@
 "use client";
 
+import { useAcceptInvite } from "@/hooks/mutations/use-accept-invite";
+import { useCurrentUser } from "@/hooks/queries/use-current-user";
+import { ApiClientError } from "@/lib/api/api-error";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useId, useMemo, useState, type FormEvent } from "react";
-
-type View = "form" | "done";
-
-function demoOrgLabel(raw: string | null): string {
-  const trimmed = raw?.trim();
-  if (!trimmed) return "your restaurant";
-  return trimmed.slice(0, 80);
-}
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useId, useState, type FormEvent } from "react";
 
 export function AcceptInviteForm() {
   const searchParams = useSearchParams();
-  const inviteInvalid = searchParams.has("error");
-  const orgLabel = useMemo(
-    () => demoOrgLabel(searchParams.get("org")),
-    [searchParams],
-  );
+  const router = useRouter();
+  const confirmFailed = searchParams.has("error");
+  const {
+    data: currentUser,
+    isLoading: userLoading,
+    isError: userError,
+  } = useCurrentUser();
+  const acceptInvite = useAcceptInvite();
 
   const formId = useId();
   const passwordId = `${formId}-password`;
   const confirmId = `${formId}-confirm`;
 
-  const [view, setView] = useState<View>("form");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -37,16 +35,28 @@ export function AcceptInviteForm() {
 
   const lengthOk = password.length >= 8;
   const matchOk = password.length > 0 && password === confirm;
+  const hasSession = Boolean(currentUser);
+  const alreadyMember = Boolean(currentUser?.membership);
+  const pendingInvite = Boolean(currentUser?.pendingManagerInvite);
+  const inviteInvalid =
+    confirmFailed ||
+    userError ||
+    (!userLoading && !hasSession) ||
+    (!userLoading && hasSession && !alreadyMember && !pendingInvite);
 
   useEffect(() => {
     document.title = inviteInvalid
       ? "Invite unavailable | ScanReview"
-      : view === "done"
-        ? "You're all set | ScanReview"
-        : "Choose your password | ScanReview";
-  }, [inviteInvalid, view]);
+      : "Choose your password | ScanReview";
+  }, [inviteInvalid]);
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (alreadyMember) {
+      router.replace("/dashboard");
+    }
+  }, [alreadyMember, router]);
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!lengthOk) {
       setError("Use a password with at least 8 characters.");
@@ -58,10 +68,33 @@ export function AcceptInviteForm() {
     }
     setError("");
     setSubmitting(true);
-    window.setTimeout(() => {
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error: passwordError } = await supabase.auth.updateUser({
+        password,
+      });
+      if (passwordError) {
+        setError(passwordError.message || "Unable to set your password.");
+        return;
+      }
+
+      await acceptInvite.mutateAsync();
+      router.push("/dashboard");
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : "Unable to finish this invite. Try again.",
+      );
+    } finally {
       setSubmitting(false);
-      setView("done");
-    }, 700);
+    }
+  }
+
+  if (userLoading || alreadyMember) {
+    return <p className="hint">Loading…</p>;
   }
 
   if (inviteInvalid) {
@@ -76,41 +109,18 @@ export function AcceptInviteForm() {
             password.
           </p>
         </header>
-        <p className="hint auth-demo-hint">
-          Demo: add <code>?error=1</code> to preview this state. No invite was
-          verified.
-        </p>
       </section>
     );
   }
 
-  if (view === "done") {
-    return (
-      <section
-        className="auth-panel--center"
-        aria-labelledby="invite-done-title"
-      >
-        <div className="auth-success-icon" aria-hidden="true">
-          ✓
-        </div>
-        <header className="auth-card-header">
-          <h1 id="invite-done-title">You’re all set</h1>
-          <p className="hint auth-lead">
-            Demo only: your password was not saved. In production, you would
-            continue to the dashboard.
-          </p>
-        </header>
-      </section>
-    );
-  }
+  const busy = submitting || acceptInvite.isPending;
 
   return (
     <section aria-labelledby="invite-form-title">
       <header className="auth-card-header">
         <h1 id="invite-form-title">Choose your password</h1>
         <p className="hint auth-lead">
-          You’ve been invited to see feedback for{" "}
-          <strong>{orgLabel}</strong>. Set a password to finish.
+          You’ve been invited to see guest feedback. Set a password to finish.
         </p>
       </header>
       <form noValidate onSubmit={handleSubmit}>
@@ -123,7 +133,7 @@ export function AcceptInviteForm() {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            disabled={submitting}
+            disabled={busy}
           />
           <Button
             type="button"
@@ -132,7 +142,7 @@ export function AcceptInviteForm() {
             aria-label={showPassword ? "Hide password" : "Show password"}
             aria-pressed={showPassword}
             onClick={() => setShowPassword((v) => !v)}
-            disabled={submitting}
+            disabled={busy}
           >
             {showPassword ? (
               <EyeOff size={18} aria-hidden="true" />
@@ -150,7 +160,7 @@ export function AcceptInviteForm() {
             autoComplete="new-password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            disabled={submitting}
+            disabled={busy}
           />
           <Button
             type="button"
@@ -161,7 +171,7 @@ export function AcceptInviteForm() {
             }
             aria-pressed={showConfirm}
             onClick={() => setShowConfirm((v) => !v)}
-            disabled={submitting}
+            disabled={busy}
           >
             {showConfirm ? (
               <EyeOff size={18} aria-hidden="true" />
@@ -187,15 +197,11 @@ export function AcceptInviteForm() {
           type="submit"
           fullWidth
           className="auth-submit"
-          disabled={submitting}
-          aria-busy={submitting}
+          disabled={busy}
+          aria-busy={busy}
         >
-          {submitting ? "Saving" : "Set password and continue"}
+          {busy ? "Saving" : "Set password and continue"}
         </Button>
-        <p className="hint auth-demo-hint">
-          Demo: append <code>?org=Cafe%20Nova</code> to customize the invite
-          copy, or <code>?error=1</code> for an invalid invite (UI only).
-        </p>
       </form>
     </section>
   );

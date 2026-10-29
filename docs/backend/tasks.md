@@ -153,12 +153,14 @@
 
 ## Phase 9 — Manager invitation slice
 
-- [ ] Choose and document invitation/membership creation design before coding.
-- [ ] Restrict invitation creation to the authenticated admin of the organization.
-- [ ] Bind invite to server-resolved organization and manager role; use expiry and one-time use where supported by the design.
-- [ ] Verify callback token server-side and create membership only from verified invite context.
-- [ ] Configure/test Supabase Auth email through Brevo SMTP if required by deployment.
-- [ ] Integrate accept-invite UI. Test expired, reused, tampered, mismatched-organization invites and privilege escalation.
+- [x] Choose and document invitation/membership creation design before coding.
+- [x] Restrict invitation creation to the authenticated admin of the organization.
+- [x] Bind invite to server-resolved organization and manager role; use expiry and one-time use where supported by the design.
+- [x] Verify callback token server-side and create membership only from verified invite context.
+- [x] Configure/test Supabase Auth email through Brevo SMTP if required by deployment. *(Documented: Auth mail is Supabase SMTP in the dashboard, not the Brevo HTTP alert adapter. Live SMTP not verified in CI.)*
+- [x] Integrate accept-invite UI. Test expired, reused, tampered, mismatched-organization invites and privilege escalation. *(Unit tests of helpers + mocked Auth; live invite email/OTP not in CI.)*
+
+**Verified (Oct 2026):** `npm test` (196 pass), `npm run lint`, `npm run build`. Migration `20261029094705_organization_manager_invite_state` via `prisma migrate dev`. `POST /api/invites/manager` is ADMIN-only; org/role from membership + `app_metadata`, never client IDs. Onboarding reuses the same service and keeps the org if send fails (`sent: false` + retry). `GET /auth/confirm` verifies OTP and redirects invite → `/accept-invite`, signup/email → `/auth/login`. `POST /api/auth/accept-invite` creates `MANAGER` membership in a transaction. Alert resolver prefers accepted manager `alertEmail` while `alertRecipient` stays `MANAGER_PENDING`. **Limitation:** unit tests mock Auth; Brevo SMTP must be configured in the Supabase dashboard for live invite mail.
 
 **Exit criteria:** manager can join only the invited organization and cannot perform admin-only operations.
 

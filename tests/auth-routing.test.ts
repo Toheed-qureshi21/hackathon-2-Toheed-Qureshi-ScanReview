@@ -12,12 +12,21 @@ const withMembership: AuthMeData = {
     organization: { id: "o1", name: "Test Org" },
   },
   onboardingRequired: false,
+  pendingManagerInvite: false,
 };
 
 const withoutMembership: AuthMeData = {
   user: { id: "u2", email: "b@b.com", fullName: null },
   membership: null,
   onboardingRequired: true,
+  pendingManagerInvite: false,
+};
+
+const pendingInvite: AuthMeData = {
+  user: { id: "u3", email: "manager@b.com", fullName: null },
+  membership: null,
+  onboardingRequired: false,
+  pendingManagerInvite: true,
 };
 
 describe("resolvePostAuthPath", () => {
@@ -43,6 +52,14 @@ describe("resolvePostAuthPath", () => {
     assert.equal(
       resolvePostAuthPath(withMembership, "//evil.example"),
       "/dashboard",
+    );
+  });
+
+  it("sends pending manager invites to accept-invite, not onboarding", () => {
+    assert.equal(resolvePostAuthPath(pendingInvite, null), "/accept-invite");
+    assert.equal(
+      resolvePostAuthPath(pendingInvite, "/dashboard/onboarding"),
+      "/accept-invite",
     );
   });
 });

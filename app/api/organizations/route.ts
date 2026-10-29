@@ -1,5 +1,6 @@
 import { jsonError, jsonSuccess } from "@/lib/api/response";
 import { getAuthenticatedUser } from "@/lib/auth/session";
+import { parseInviteAppMetadata } from "@/lib/invites/manager-invite-metadata";
 import {
   createOrganizationFromOnboarding,
   OrganizationAlreadyExistsError,
@@ -14,6 +15,14 @@ export async function POST(request: Request) {
   const session = await getAuthenticatedUser();
   if (!session.ok) {
     return jsonError("UNAUTHENTICATED", "Sign in to continue.", 401);
+  }
+
+  if (parseInviteAppMetadata(session.user.app_metadata)) {
+    return jsonError(
+      "FORBIDDEN",
+      "Finish accepting your manager invite instead of creating an organization.",
+      403,
+    );
   }
 
   let body: unknown;

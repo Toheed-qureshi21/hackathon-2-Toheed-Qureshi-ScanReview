@@ -18,4 +18,6 @@ export type AuthMeData = {
   membership: AuthMeMembership | null;
   /** True when the user is signed in but has no Member row yet (onboarding). */
   onboardingRequired: boolean;
+  /** True when Auth app_metadata has a pending manager invite and no membership. */
+  pendingManagerInvite: boolean;
 };

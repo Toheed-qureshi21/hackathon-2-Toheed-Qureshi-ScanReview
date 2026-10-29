@@ -493,11 +493,14 @@ textarea {
 }
 
 .auth {
-  display: grid;
-  place-items: start center;
-  padding: 1rem 0 3rem;
+  display: flex;
   flex: 1;
-  align-content: start;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  padding: 1.5rem 0 3rem;
+  box-sizing: border-box;
 }
 
 .auth-card {

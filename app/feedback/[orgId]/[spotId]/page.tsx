@@ -1,10 +1,10 @@
-import { MockIdFeedbackPage } from "@/components/feedback/mock-id-feedback-page";
+import { PublicTokenFeedbackPage } from "@/components/feedback/public-token-feedback-page";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "How was your visit? | ScanReview",
-  description: "Share quick guest feedback — demo UI, no sign-up.",
+  description: "Share quick guest feedback — no sign-up.",
 };
 
 function FeedbackFallback() {
@@ -14,7 +14,7 @@ function FeedbackFallback() {
 export default function GuestFeedbackPage() {
   return (
     <Suspense fallback={<FeedbackFallback />}>
-      <MockIdFeedbackPage />
+      <PublicTokenFeedbackPage />
     </Suspense>
   );
 }

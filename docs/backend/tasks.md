@@ -99,13 +99,15 @@
 
 ## Phase 5 — Public guest rating and feedback persistence slice
 
-- [ ] Resolve opaque public token to safe spot/organization display data without requiring guest login.
-- [ ] Validate public token and active spot state; never accept organization/spot ownership from request body as authoritative.
-- [ ] Zod-validate rating as integer 1–5 and bound optional comment/contact input.
-- [ ] Derive organization and spot from trusted token resolution; use server-generated timestamps.
-- [ ] Implement the approved duplicate-submission/rate-limit/abuse strategy.
-- [ ] Integrate the guest rating flow and low-rating contact/skip interaction with the API.
-- [ ] Test all ratings, invalid/unknown tokens, malformed and oversized payloads, abuse limits and persisted relation integrity.
+- [x] Resolve opaque public token to safe spot/organization display data without requiring guest login (`GET /api/public/spot`).
+- [x] Validate public token and active spot state; never accept organization/spot ownership from request body as authoritative.
+- [x] Zod-validate rating as integer 1–5 and bound optional comment/contact input.
+- [x] Derive organization and spot from trusted token resolution; use server-generated timestamps.
+- [x] Implement the approved duplicate-submission/rate-limit/abuse strategy (process-local ~10/token and ~30/IP per 10 minutes; **not** shared across Vercel isolates).
+- [x] Integrate the guest rating flow and low-rating contact/skip interaction with the API.
+- [x] Test all ratings, invalid/unknown tokens, malformed and oversized payloads, abuse limits and persisted relation integrity. *(Unit tests; live HTTP insert not in CI.)*
+
+**Verified (Oct 2026):** Migration `20261029085607_add_feedback`. `/feedback/demo` does not persist. Dashboard feedback list remains mock. No Brevo/Gemini. Public DTO omits tokens, members, and manager emails.
 
 **Exit criteria:** guest ratings persist and guest flow continues correctly without login.
 

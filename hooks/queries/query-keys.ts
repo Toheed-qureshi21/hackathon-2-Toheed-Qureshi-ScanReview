@@ -14,4 +14,6 @@ export const queryKeys = {
       ["feedback", { filters: filters ?? {} }] as const,
     detail: (feedbackId: string) => ["feedback", feedbackId] as const,
   },
+  publicSpot: (organizationId: string, token: string) =>
+    ["public", "spot", { organizationId, token }] as const,
 } as const;

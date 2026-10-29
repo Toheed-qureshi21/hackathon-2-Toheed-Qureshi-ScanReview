@@ -19,7 +19,7 @@ export function GuestFeedbackInvalid({
           <p className="hint" style={{ marginTop: "0.65rem" }}>
             {message}
           </p>
-          <p className="hint guest-demo-tag">Demo guest feedback · UI preview only</p>
+          <p className="hint guest-demo-tag">No sign-up required</p>
           <ButtonLink href="/" fullWidth style={{ marginTop: "1.25rem" }}>
             Back to ScanReview
           </ButtonLink>

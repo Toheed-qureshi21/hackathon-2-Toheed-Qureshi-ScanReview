@@ -1,10 +1,10 @@
-import { MockIdReviewPage } from "@/components/feedback/mock-id-review-page";
+import { PublicTokenReviewPage } from "@/components/feedback/public-token-review-page";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Your review draft | ScanReview",
-  description: "Review drafter handoff (demo UI).",
+  description: "Turn your rating into an editable review draft.",
 };
 
 function ReviewFallback() {
@@ -14,7 +14,7 @@ function ReviewFallback() {
 export default function GuestReviewHandoffPage() {
   return (
     <Suspense fallback={<ReviewFallback />}>
-      <MockIdReviewPage />
+      <PublicTokenReviewPage />
     </Suspense>
   );
 }

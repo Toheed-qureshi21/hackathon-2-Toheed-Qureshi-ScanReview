@@ -3,16 +3,24 @@
 import { FeedbackStarRating } from "@/components/feedback/feedback-star-rating";
 import { GuestFeedbackHeader } from "@/components/feedback/guest-feedback-header";
 import { Button } from "@/components/ui/button";
+import { useSubmitPublicFeedback } from "@/hooks/mutations/use-submit-public-feedback";
+import { ApiClientError } from "@/lib/api/api-error";
 import { buildGuestReviewHref } from "@/lib/feedback/guest-review-navigation";
+import {
+  isHighRating,
+  isLowRating,
+  shouldPersistGuestRating,
+} from "@/lib/feedback/guest-submit-flow";
 import type { GuestFeedbackContext } from "@/lib/mocks/guest-feedback";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const EMAIL_OR_PHONE =
-  /^(\S+@\S+\.\S+|[+]?[\d\s().-]{7,})$/;
+const EMAIL_OR_PHONE = /^(\S+@\S+\.\S+|[+]?[\d\s().-]{7,})$/;
 
 type GuestFeedbackExperienceProps = {
   context: GuestFeedbackContext;
+  organizationId?: string;
+  token?: string;
 };
 
 function orgDisplayName(orgName: string) {
@@ -22,17 +30,26 @@ function orgDisplayName(orgName: string) {
 
 export function GuestFeedbackExperience({
   context,
+  organizationId,
+  token,
 }: GuestFeedbackExperienceProps) {
   const router = useRouter();
+  const persistEnabled = shouldPersistGuestRating(context.demo);
+  const submitFeedback = useSubmitPublicFeedback();
+
   const [rating, setRating] = useState(0);
   const [contactError, setContactError] = useState("");
+  const [submitError, setSubmitError] = useState("");
   const [contactName, setContactName] = useState("");
   const [contactValue, setContactValue] = useState("");
+  const [lowRatingReady, setLowRatingReady] = useState(false);
   const autoNavRef = useRef<number | null>(null);
+  const persistedRatingRef = useRef<number | null>(null);
 
   const orgLabel = orgDisplayName(context.orgName);
-  const isHigh = rating >= 3;
-  const isLow = rating >= 1 && rating <= 2;
+  const isHigh = isHighRating(rating);
+  const isLow = isLowRating(rating);
+  const pending = submitFeedback.isPending;
 
   useEffect(() => {
     document.title = `How was your visit to ${orgLabel}?`;
@@ -43,30 +60,84 @@ export function GuestFeedbackExperience({
     router.push(href);
   }, [context, rating, router]);
 
+  const persistRating = useCallback(
+    async (nextRating: number, extras?: { contactName?: string; contact?: string }) => {
+      if (!persistEnabled) return true;
+      if (!organizationId || !token) {
+        setSubmitError("This feedback link isn’t valid.");
+        return false;
+      }
+      if (
+        persistedRatingRef.current === nextRating &&
+        !extras?.contact &&
+        !extras?.contactName
+      ) {
+        return true;
+      }
+      try {
+        await submitFeedback.mutateAsync({
+          organizationId,
+          token,
+          rating: nextRating,
+          contactName: extras?.contactName || null,
+          contact: extras?.contact || null,
+          comment: null,
+        });
+        persistedRatingRef.current = nextRating;
+        return true;
+      } catch (err) {
+        const message =
+          err instanceof ApiClientError
+            ? err.message
+            : "Could not save your rating. Try again.";
+        setSubmitError(message);
+        return false;
+      }
+    },
+    [organizationId, persistEnabled, submitFeedback, token],
+  );
+
   useEffect(() => {
     if (autoNavRef.current) {
       window.clearTimeout(autoNavRef.current);
       autoNavRef.current = null;
     }
     if (
-      rating >= 3 &&
+      isHigh &&
+      !pending &&
       !window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
       autoNavRef.current = window.setTimeout(() => {
-        goToReview();
+        void (async () => {
+          const ok = await persistRating(rating);
+          if (ok) goToReview();
+        })();
       }, 1600);
     }
     return () => {
       if (autoNavRef.current) window.clearTimeout(autoNavRef.current);
     };
-  }, [rating, goToReview]);
+  }, [goToReview, isHigh, pending, persistRating, rating]);
 
-  function handleRatingChange(next: number) {
+  async function handleRatingChange(next: number) {
     setContactError("");
+    setSubmitError("");
     setRating(next);
+    persistedRatingRef.current = null;
+    setLowRatingReady(false);
+
+    if (isLowRating(next) && persistEnabled) {
+      const ok = await persistRating(next);
+      if (ok) setLowRatingReady(true);
+      return;
+    }
+
+    if (isLowRating(next) && !persistEnabled) {
+      setLowRatingReady(true);
+    }
   }
 
-  function handleShareContact() {
+  async function handleShareContact() {
     const contact = contactValue.trim();
     if (!contact) {
       setContactError("Add a phone number or email, or use the button below.");
@@ -77,13 +148,28 @@ export function GuestFeedbackExperience({
       return;
     }
     setContactError("");
-    goToReview();
+    setSubmitError("");
+    const ok = await persistRating(rating, {
+      contactName: contactName.trim(),
+      contact,
+    });
+    if (ok) goToReview();
   }
 
-  function handleSkipContact() {
+  async function handleSkipContact() {
     setContactError("");
-    goToReview();
+    setSubmitError("");
+    const ok = await persistRating(rating);
+    if (ok) goToReview();
   }
+
+  async function handleContinueHigh() {
+    setSubmitError("");
+    const ok = await persistRating(rating);
+    if (ok) goToReview();
+  }
+
+  const showLowForm = isLow && lowRatingReady;
 
   return (
     <>
@@ -96,7 +182,11 @@ export function GuestFeedbackExperience({
           </h1>
           <p className="hint guest-lead">Takes 10 seconds. No sign-up.</p>
 
-          <FeedbackStarRating value={rating} onChange={handleRatingChange} />
+          <FeedbackStarRating
+            value={rating}
+            onChange={(next) => void handleRatingChange(next)}
+            disabled={pending}
+          />
 
           {isHigh ? (
             <div className="fb-rev" role="status">
@@ -104,21 +194,29 @@ export function GuestFeedbackExperience({
               <div className="fb-bar" aria-hidden="true" key={rating}>
                 <i className="fb-bar-fill" />
               </div>
-              <Button type="button" fullWidth onClick={goToReview}>
-                Continue
+              <Button
+                type="button"
+                fullWidth
+                onClick={() => void handleContinueHigh()}
+                disabled={pending}
+                aria-busy={pending}
+              >
+                {pending ? "Saving…" : "Continue"}
               </Button>
-              <p className="hint guest-demo-tag">
-                Demo: continuing opens the review handoff (no data saved).
-              </p>
+              {context.demo ? (
+                <p className="hint guest-demo-tag">
+                  Demo: continuing opens the review handoff (no data saved).
+                </p>
+              ) : null}
             </div>
           ) : null}
 
-          {isLow ? (
+          {showLowForm ? (
             <div className="fb-rev fb-rev--low">
               <h2>We’re sorry that happened.</h2>
               <p className="hint fb-apology">
-                We’ve told the manager, and someone will come to your table
-                shortly. If you’d like a follow-up, leave a way to reach you.
+                If you’d like a follow-up, leave a way to reach you. You can
+                also skip this step.
               </p>
               <label htmlFor="fb-name">
                 Name <span className="hint">(optional)</span>
@@ -128,6 +226,7 @@ export function GuestFeedbackExperience({
                 autoComplete="name"
                 value={contactName}
                 onChange={(e) => setContactName(e.target.value)}
+                disabled={pending}
               />
               <label htmlFor="fb-contact">
                 Phone or email <span className="hint">(optional)</span>
@@ -141,19 +240,36 @@ export function GuestFeedbackExperience({
                   setContactValue(e.target.value);
                   if (contactError) setContactError("");
                 }}
+                disabled={pending}
               />
               <p className="err" role={contactError ? "alert" : undefined}>
                 {contactError}
               </p>
               <div className="acts acts--stack">
-                <Button type="button" onClick={handleShareContact}>
-                  Share my contact
+                <Button
+                  type="button"
+                  onClick={() => void handleShareContact()}
+                  disabled={pending}
+                  aria-busy={pending}
+                >
+                  {pending ? "Saving…" : "Share my contact"}
                 </Button>
-                <Button type="button" variant="ghost" onClick={handleSkipContact}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => void handleSkipContact()}
+                  disabled={pending}
+                >
                   I don’t want to share my contact
                 </Button>
               </div>
             </div>
+          ) : null}
+
+          {submitError ? (
+            <p className="err" role="alert">
+              {submitError}
+            </p>
           ) : null}
         </div>
       </main>

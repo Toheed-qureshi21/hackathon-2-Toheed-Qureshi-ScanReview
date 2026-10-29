@@ -34,6 +34,7 @@ model Organization {
   updatedAt           DateTime           @updatedAt
   members             Member[]
   spots               Spot[]
+  feedback            Feedback[]
 }
 
 model Member {
@@ -59,7 +60,25 @@ model Spot {
   qrStoragePath  String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  feedback       Feedback[]
 
   @@unique([organizationId, number])
   @@index([organizationId])
+}
+
+model Feedback {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  spotId         String       @db.Uuid
+  spot           Spot         @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  rating         Int
+  comment        String?
+  contactName    String?
+  contactEmail   String?
+  contactPhone   String?
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([spotId, createdAt])
 }

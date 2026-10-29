@@ -13,7 +13,11 @@ import {
   type BusinessType,
   type LabelPreset,
 } from "@/lib/onboarding/constants";
-import Link from "next/link";
+import { useCreateOrganization } from "@/hooks/mutations/use-create-organization";
+import { ApiClientError } from "@/lib/api/api-error";
+import type { CreateOrganizationBody } from "@/lib/validations/onboarding";
+import type { CreateOrganizationResponse } from "@/types/organization-onboarding";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
@@ -102,8 +106,13 @@ export function OnboardingWizard() {
   const [managerName, setManagerName] = useState("");
   const [managerEmail, setManagerEmail] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [snapshot, setSnapshot] = useState<OnboardingSnapshot | null>(null);
+  const [formError, setFormError] = useState("");
+  const [result, setResult] = useState<CreateOrganizationResponse | null>(
+    null,
+  );
+  const createOrganization = useCreateOrganization();
+  const router = useRouter();
+  const submitting = createOrganization.isPending;
 
   const spotLabelPreview = useMemo(
     () => resolveSpotLabel(labelPreset, customLabel) || "…",
@@ -129,6 +138,8 @@ export function OnboardingWizard() {
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setFormError("");
+
     const parsed: OnboardingSnapshot = {
       org: org.trim(),
       businessType: resolveBusinessType(businessType, customBusinessType),
@@ -158,65 +169,87 @@ export function OnboardingWizard() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    setSubmitting(true);
-    window.setTimeout(() => {
-      setSubmitting(false);
-      setSnapshot(parsed);
-      setStep("done");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 650);
+    const requestBody: CreateOrganizationBody = {
+      organizationName: parsed.org,
+      businessType,
+      customBusinessType:
+        businessType === "Custom" ? customBusinessType.trim() : undefined,
+      labelPreset,
+      customLabel: labelPreset === "Custom" ? customLabel.trim() : undefined,
+      spotCount: parsed.spotCount,
+      reviewUrl: parsed.reviewUrl || undefined,
+      alertRecipient,
+      managerName:
+        alertRecipient === "manager" ? parsed.managerName : undefined,
+      managerEmail:
+        alertRecipient === "manager" ? parsed.managerEmail : undefined,
+    };
+
+    createOrganization.mutate(requestBody, {
+      onSuccess: (data) => {
+        setResult(data);
+        setStep("done");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      },
+      onError: (err) => {
+        if (err instanceof ApiClientError) {
+          if (err.code === "ORGANIZATION_ALREADY_EXISTS") {
+            setFormError(
+              "You already belong to an organization. Open the dashboard instead.",
+            );
+            return;
+          }
+          if (err.code === "VALIDATION_ERROR") {
+            setFormError(err.message);
+            return;
+          }
+          setFormError(err.message);
+          return;
+        }
+        setFormError("Could not create your organization. Try again.");
+      },
+    });
   }
 
-  if (step === "done" && snapshot) {
-    const managerInvite = snapshot.alertRecipient === "manager";
+  if (step === "done" && result) {
+    const managerInvite = result.managerInvite.requested;
     return (
       <section className="onboarding-done-panel" aria-labelledby="ob-done-title">
         <div className="ob-panel-head">
           <h1 id="ob-done-title">Your QR codes are ready</h1>
           <p className="hint">
-            {snapshot.spotCount} demo QR codes for {snapshot.org} (
-            {snapshot.businessType}). Nothing was saved — this is a UI preview
-            only.
+            {result.spots.length} QR codes for {result.organization.name} (
+            {result.organization.businessType}). Saved to your account.
           </p>
-          <p className="hint">
-            {managerInvite
-              ? `Demo: we would email an invite to ${snapshot.managerEmail} (${snapshot.managerName}) so they can set a password and sign in. Low-rating alerts would go to them.`
-              : "Demo: low-rating alerts would go to your email."}
+          <p className="hint" role="status">
+            {result.managerInvite.notice}
           </p>
-          {managerInvite ? (
-            <Link
-              className="hint noprint"
-              href={`/accept-invite?org=${encodeURIComponent(snapshot.org)}`}
-            >
-              Preview the page the manager sees after clicking the invite
-            </Link>
-          ) : null}
         </div>
         <div className="onboarding-review-summary noprint" role="status">
           <dl>
             <div>
               <dt>Business</dt>
               <dd>
-                {snapshot.org} · {snapshot.businessType}
+                {result.organization.name} · {result.organization.businessType}
               </dd>
             </div>
             <div>
               <dt>Spot label</dt>
-              <dd>{snapshot.spotLabel}</dd>
+              <dd>{result.organization.spotLabel}</dd>
             </div>
             <div>
               <dt>Spots</dt>
-              <dd>{snapshot.spotCount}</dd>
+              <dd>{result.spots.length}</dd>
             </div>
             <div>
               <dt>Review link</dt>
-              <dd>{snapshot.reviewUrl || "Not set"}</dd>
+              <dd>{result.organization.publicReviewUrl || "Not set"}</dd>
             </div>
             <div>
               <dt>Alerts</dt>
               <dd>
                 {managerInvite
-                  ? `${snapshot.managerName} (${snapshot.managerEmail})`
+                  ? "Manager (invite not sent yet)"
                   : "Just me (admin)"}
               </dd>
             </div>
@@ -226,19 +259,17 @@ export function OnboardingWizard() {
           <Button type="button" onClick={() => window.print()}>
             Print codes
           </Button>
-          <Button type="button" variant="ghost" onClick={() => setStep("form")}>
-            Edit details
+          <Button
+            type="button"
+            onClick={() => router.push("/dashboard")}
+          >
+            Open dashboard
           </Button>
         </div>
-        <OnboardingQrGrid
-          org={snapshot.org}
-          spotLabel={snapshot.spotLabel}
-          count={snapshot.spotCount}
-          reviewLink={snapshot.reviewUrl}
-        />
+        <OnboardingQrGrid spots={result.spots} />
         <p className="hint noprint ob-panel-footnote">
-          Tap a code to open the demo guest URL shape (feedback route not built
-          yet). Each card is marked <strong>Demo QR</strong>.
+          Tap a code to open the guest feedback page for that spot. Guest
+          persistence and alerts are enabled in later slices.
         </p>
       </section>
     );
@@ -436,9 +467,8 @@ export function OnboardingWizard() {
                 disabled={submitting}
               />
               <p className="hint field-note">
-                Demo only: no invite is sent. In production, we would email an
-                invite so they can choose a password and see feedback. They also
-                get the low-rating alerts.
+                We save their name and email for alerts and a future invite.
+                Email invitations are not sent in this release.
               </p>
               {errors.manager ? (
                 <p className="err" role="alert">
@@ -455,6 +485,11 @@ export function OnboardingWizard() {
           </div>
         ) : null}
 
+        {formError ? (
+          <p className="err" role="alert">
+            {formError}
+          </p>
+        ) : null}
         <div className="form-field form-field--submit">
           <Button
             type="submit"
@@ -462,7 +497,7 @@ export function OnboardingWizard() {
             disabled={submitting}
             aria-busy={submitting}
           >
-            {submitting ? "Please wait" : "Create QR codes"}
+            {submitting ? "Creating…" : "Create QR codes"}
           </Button>
         </div>
       </form>

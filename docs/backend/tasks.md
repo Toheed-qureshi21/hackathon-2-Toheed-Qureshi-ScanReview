@@ -71,14 +71,16 @@
 
 ## Phase 3 — Admin onboarding slice
 
-- [ ] Zod-validate organization name, business type, preset/custom label, spot count, optional HTTPS review URL, and selected alert recipient.
-- [ ] Validate custom labels as trimmed, non-empty, and length-limited; validate spot count as an integer from 1 through 50.
-- [ ] Create organization, admin membership, settings and initial spots in a transaction.
-- [ ] Generate cryptographically random public tokens on the server; never use sequential/internal IDs as public QR secrets.
-- [ ] Prevent unintended duplicate onboarding submissions and ensure transaction rollback on failure.
-- [ ] Implement the approved Route Handler and safe DTO.
-- [ ] Integrate onboarding Axios function, mutation hook and UI states. Replace only onboarding mock success.
-- [ ] Test validation failures, cap enforcement, authorization, duplicate submission, and transaction behavior.
+- [x] Zod-validate organization name, business type, preset/custom label, spot count, optional HTTPS review URL, and selected alert recipient.
+- [x] Validate custom labels as trimmed, non-empty, and length-limited; validate spot count as an integer from 1 through 50.
+- [x] Create organization, admin membership, settings and initial spots in a transaction.
+- [x] Generate cryptographically random public tokens on the server; never use sequential/internal IDs as public QR secrets.
+- [x] Prevent unintended duplicate onboarding submissions and ensure transaction rollback on failure.
+- [x] Implement the approved Route Handler and safe DTO (`POST /api/organizations`).
+- [x] Integrate onboarding Axios function, mutation hook and UI states. Replace only onboarding mock success.
+- [x] Test validation failures, cap enforcement, authorization, duplicate submission, and transaction behavior. *(Unit tests for Zod + tokens; live DB/API integration and rollback tests not automated.)*
+
+**Verified (Oct 2026):** `POST /api/organizations` creates org + admin `Member` + `Spot` rows in one transaction; duplicate membership returns `409`; manager invite is stored but **not sent** (Brevo/invite slice deferred). Migration `20261029082240_onboarding_organization_spots`. QR URLs use `APP_URL` / `NEXT_PUBLIC_APP_URL` / `VERCEL_URL`, not request `Host`.
 
 **Exit criteria:** onboarding creates persisted organization and spots; the UI displays the server response.
 

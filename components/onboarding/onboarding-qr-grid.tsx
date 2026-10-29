@@ -1,19 +1,12 @@
 "use client";
 
-import {
-  demoGuestFeedbackPath,
-  demoGuestFeedbackUrl,
-  formatSpotName,
-} from "@/lib/onboarding/constants";
+import type { OnboardingSpotDto } from "@/types/organization-onboarding";
 import QRCode from "qrcode";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type OnboardingQrGridProps = {
-  org: string;
-  spotLabel: string;
-  count: number;
-  reviewLink: string;
+  spots: OnboardingSpotDto[];
 };
 
 function QrCard({
@@ -47,7 +40,7 @@ function QrCard({
     <Link
       className="q"
       href={linkHref}
-      title="Preview guest page (demo route)"
+      title="Open guest feedback page"
       style={{ animationDelay: `${delayMs}ms` }}
     >
       <div className="q-code">
@@ -64,43 +57,18 @@ function QrCard({
   );
 }
 
-export function OnboardingQrGrid({
-  org,
-  spotLabel,
-  count,
-  reviewLink,
-}: OnboardingQrGridProps) {
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : "https://demo.local";
-
+export function OnboardingQrGrid({ spots }: OnboardingQrGridProps) {
   return (
     <div className="qrs">
-      {Array.from({ length: count }, (_, i) => {
-        const spotNumber = i + 1;
-        const title = formatSpotName(spotLabel, spotNumber);
-        const linkHref = demoGuestFeedbackPath(
-          org,
-          spotLabel,
-          spotNumber,
-          reviewLink,
-        );
-        const href = demoGuestFeedbackUrl(
-          origin,
-          org,
-          spotLabel,
-          spotNumber,
-          reviewLink,
-        );
-        return (
-          <QrCard
-            key={spotNumber}
-            href={href}
-            linkHref={linkHref}
-            title={title}
-            delayMs={Math.min(spotNumber, 24) * 30}
-          />
-        );
-      })}
+      {spots.map((spot) => (
+        <QrCard
+          key={spot.id}
+          href={spot.publicFeedbackUrl}
+          linkHref={spot.publicFeedbackPath}
+          title={spot.displayName}
+          delayMs={Math.min(spot.number, 24) * 30}
+        />
+      ))}
     </div>
   );
 }

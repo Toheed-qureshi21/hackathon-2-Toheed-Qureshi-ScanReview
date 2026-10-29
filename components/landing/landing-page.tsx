@@ -1,5 +1,6 @@
+import { BrandLink } from "@/components/ui/brand-link";
+import { ButtonLink } from "@/components/ui/button";
 import Link from "next/link";
-import { BrandLink } from "./brand-link";
 import { HeroDemo } from "./hero-demo";
 import { ScrollReveal } from "./scroll-reveal";
 import { SiteHeader } from "./site-header";
@@ -24,19 +25,17 @@ export function LandingPage() {
               <span className="eyebrow-dot" aria-hidden="true" />
               FEEDBACK THAT REACHES YOUR TEAM IN TIME
             </div>
-            <h1>Hear about a bad experience while the guest is still at the table.</h1>
+            <h1>Resolve Guest Issues Before They Become Bad Reviews</h1>
             <p className="lead">
               Put a QR code on every table. A 1 or 2 star rating alerts your
               manager with the exact table in seconds, and every guest gets an
               AI-written review draft they can edit and post.
             </p>
             <div className="cta">
-              <Link className="btn pri" href="/login#signup">
-                Create your QR codes
-              </Link>
-              <Link className="btn gh" href="#how">
+              <ButtonLink href="/login#signup">Create your QR codes</ButtonLink>
+              <ButtonLink href="#how" variant="ghost">
                 See how it works
-              </Link>
+              </ButtonLink>
             </div>
             <p className="sub">
               Guests need no app and no account. Setup takes about a minute.
@@ -196,9 +195,9 @@ export function LandingPage() {
 
         <section className="band">
           <h2>See it on your own tables</h2>
-          <Link className="btn" href="/login#signup">
+          <ButtonLink href="/login#signup" variant="band">
             Create your QR codes
-          </Link>
+          </ButtonLink>
           <p>Takes about a minute to set up.</p>
         </section>
       </main>

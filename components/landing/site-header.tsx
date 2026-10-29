@@ -1,4 +1,4 @@
-import { BrandLink } from "./brand-link";
+import { BrandLink } from "@/components/ui/brand-link";
 import { SiteNav } from "./site-nav";
 
 export function SiteHeader() {

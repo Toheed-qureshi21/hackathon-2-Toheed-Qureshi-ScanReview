@@ -1,17 +1,45 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { MenuItemButton, MenuItemLink } from "@/components/ui/menu-item";
 import { Menu, X } from "lucide-react";
-import Link from "next/link";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
 import { THEME_EMOJI, useTheme } from "./use-theme";
+
+function syncNavSheetTop() {
+  const header = document.getElementById("top");
+  if (!header) return;
+  const bottom = header.getBoundingClientRect().bottom;
+  document.documentElement.style.setProperty("--nav-sheet-top", `${bottom}px`);
+}
 
 export function SiteNav() {
   const [open, setOpen] = useState(false);
   const { theme, cycleTheme } = useTheme();
   const menuId = useId();
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const close = useCallback(() => setOpen(false), []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    syncNavSheetTop();
+    window.addEventListener("resize", syncNavSheetTop);
+    window.addEventListener("scroll", syncNavSheetTop, { passive: true });
+    return () => {
+      window.removeEventListener("resize", syncNavSheetTop);
+      window.removeEventListener("scroll", syncNavSheetTop);
+    };
+  }, [open]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -26,9 +54,10 @@ export function SiteNav() {
       if (e.key === "Escape") close();
     }
     function onPointerDown(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        close();
-      }
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target)) return;
+      if (dropdownRef.current?.contains(target)) return;
+      close();
     }
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("mousedown", onPointerDown);
@@ -38,11 +67,48 @@ export function SiteNav() {
     };
   }, [open, close]);
 
-  return (
-    <div className="nav-menu-wrap" ref={wrapRef}>
+  const menuPanel = open ? (
+    <>
       <button
         type="button"
-        className="nav-menu-trigger btn gh sm"
+        className="nav-dropdown-backdrop"
+        aria-label="Close menu"
+        onClick={close}
+      />
+      <div
+        id={menuId}
+        ref={dropdownRef}
+        className="nav-dropdown nav-dropdown--viewport"
+        role="menu"
+        aria-label="Site menu"
+      >
+        <MenuItemLink href="/login" onClick={close}>
+          Log in
+        </MenuItemLink>
+        <MenuItemLink href="/login#signup" variant="primary" onClick={close}>
+          Get started
+        </MenuItemLink>
+        <MenuItemButton
+          onClick={() => {
+            cycleTheme();
+          }}
+        >
+          <span className="nav-dropdown-theme-label">Theme</span>
+          <span className="nav-dropdown-theme-value">
+            <span aria-hidden="true">{THEME_EMOJI[theme]}</span> {theme}
+          </span>
+        </MenuItemButton>
+      </div>
+    </>
+  ) : null;
+
+  return (
+    <div className="nav-menu-wrap">
+      <Button
+        ref={triggerRef}
+        variant="ghost"
+        size="sm"
+        className="nav-menu-trigger"
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         aria-controls={menuId}
@@ -53,46 +119,10 @@ export function SiteNav() {
         ) : (
           <Menu size={20} strokeWidth={1.75} aria-hidden="true" />
         )}
-      </button>
-
-      {open ? (
-        <div
-          id={menuId}
-          className="nav-dropdown"
-          role="menu"
-          aria-label="Site menu"
-        >
-          <Link
-            className="nav-dropdown-item"
-            href="/login"
-            role="menuitem"
-            onClick={close}
-          >
-            Log in
-          </Link>
-          <Link
-            className="nav-dropdown-item nav-dropdown-item--primary"
-            href="/login#signup"
-            role="menuitem"
-            onClick={close}
-          >
-            Get started
-          </Link>
-          <button
-            type="button"
-            className="nav-dropdown-item"
-            role="menuitem"
-            onClick={() => {
-              cycleTheme();
-            }}
-          >
-            <span className="nav-dropdown-theme-label">Theme</span>
-            <span className="nav-dropdown-theme-value">
-              <span aria-hidden="true">{THEME_EMOJI[theme]}</span> {theme}
-            </span>
-          </button>
-        </div>
-      ) : null}
+      </Button>
+      {typeof document !== "undefined" &&
+        menuPanel &&
+        createPortal(menuPanel, document.body)}
     </div>
   );
 }

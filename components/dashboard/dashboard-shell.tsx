@@ -56,47 +56,20 @@ type NavItem = {
 const WORKSPACE_NAV: NavItem[] = [
   {
     href: "/dashboard",
-    label: "Overview",
+    label: "Dashboard",
     icon: <LayoutDashboard size={18} strokeWidth={1.75} aria-hidden />,
-    previewOnly: true,
   },
+ 
   {
     href: "/dashboard/feedback",
     label: "Guest feedback",
     icon: <MessageSquare size={18} strokeWidth={1.75} aria-hidden />,
   },
-  {
-    href: "/dashboard",
-    label: "Low-rating alerts",
-    icon: <Bell size={18} strokeWidth={1.75} aria-hidden />,
-    previewOnly: true,
-  },
-  {
-    href: "/dashboard",
-    label: "QR codes",
-    icon: <QrCode size={18} strokeWidth={1.75} aria-hidden />,
-  },
-  {
-    href: "/dashboard",
-    label: "Review drafts",
-    icon: <FilePen size={18} strokeWidth={1.75} aria-hidden />,
-    previewOnly: true,
-  },
+  
 ];
 
 const MANAGE_NAV: NavItem[] = [
-  {
-    href: "/dashboard",
-    label: "Team members",
-    icon: <Users size={18} strokeWidth={1.75} aria-hidden />,
-    previewOnly: true,
-  },
-  {
-    href: "/dashboard",
-    label: "Settings",
-    icon: <Settings size={18} strokeWidth={1.75} aria-hidden />,
-    previewOnly: true,
-  },
+
   {
     href: "/dashboard/onboarding",
     label: "Business onboarding",
@@ -336,29 +309,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
             {MANAGE_NAV.map(renderNavItem)}
           </nav>
         </div>
-        <div className="dashboard-sidebar-bottom noprint">
-          <div className="dashboard-help-card">
-            <strong>Need a hand?</strong>
-            <p className="hint">Get help setting up your feedback experience.</p>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setNavToast("Help center — demo preview only")}
-            >
-              Visit help center ↗
-            </Button>
-          </div>
-          <div className="dashboard-profile">
-            <span className="dashboard-avatar dashboard-avatar--profile">
-              {userLoading ? "…" : profileInitials}
-            </span>
-            <div className="dashboard-workspace-copy">
-              <strong>{userLoading ? "Loading…" : profileName}</strong>
-              <span>{userLoading ? " " : profileRole}</span>
-            </div>
-          </div>
-        </div>
+       
       </aside>
       <div className="dashboard-main">
         <header className="dashboard-topbar noprint">
@@ -384,15 +335,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
             <strong>{breadcrumbPage}</strong>
           </p>
           <div className="dashboard-top-actions">
-            <label className="dashboard-search">
-              <span className="sr-only">Search feedback</span>
-              <input
-                type="search"
-                value={globalSearch}
-                onChange={(e) => setGlobalSearch(e.target.value)}
-                placeholder="Search feedback…"
-              />
-            </label>
+           
             <ThemeToggle />
             <DashboardLogoutButton
               onError={(message) => setNavToast(message)}

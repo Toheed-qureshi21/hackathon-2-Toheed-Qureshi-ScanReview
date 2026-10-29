@@ -11,6 +11,7 @@ import {
   inviteExpiryFrom,
   normalizeManagerEmail,
 } from "@/lib/invites/manager-invite-rules";
+import { EMAIL_PATTERN } from "@/lib/validations/public-feedback";
 import type { ManagerInviteResult } from "@/types/manager-invite";
 
 export class ManagerInviteError extends Error {
@@ -99,6 +100,18 @@ export async function inviteManagerForOrganization(
       inviteAcceptedAt: null,
     },
   });
+
+  const adminAlertEmail = input.adminEmail?.trim() ?? "";
+  if (adminAlertEmail && EMAIL_PATTERN.test(adminAlertEmail)) {
+    await prisma.member.updateMany({
+      where: {
+        organizationId,
+        role: "ADMIN",
+        alertEmail: null,
+      },
+      data: { alertEmail: adminAlertEmail },
+    });
+  }
 
   const invited = await auth.inviteUserByEmail(managerEmail, redirectTo);
   const bound = await bindManagerInviteAuth({

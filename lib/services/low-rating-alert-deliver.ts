@@ -25,6 +25,19 @@ export function alertStatusFromSendResult(
   return "failed";
 }
 
+export function alertStatusFromSendResults(
+  results: readonly BrevoSendResult[],
+): AlertLogStatus {
+  if (results.some((result) => result.ok)) return "sent";
+  if (
+    results.length > 0 &&
+    results.every((result) => !result.ok && result.reason === "unconfigured")
+  ) {
+    return "skipped_unconfigured";
+  }
+  return "failed";
+}
+
 export async function deliverLowRatingAlert(input: {
   feedbackId: string;
   organization: (AlertRecipientOrganization & { name: string }) | null;
@@ -64,14 +77,19 @@ export async function deliverLowRatingAlert(input: {
       comment: input.comment,
     });
 
-    const result = await input.sendEmail({
-      toEmail: recipient.email,
-      subject: content.subject,
-      text: content.text,
-      html: content.html,
-    });
+    const results: BrevoSendResult[] = [];
+    for (const toEmail of recipient.emails) {
+      results.push(
+        await input.sendEmail({
+          toEmail,
+          subject: content.subject,
+          text: content.text,
+          html: content.html,
+        }),
+      );
+    }
 
-    const status = alertStatusFromSendResult(result);
+    const status = alertStatusFromSendResults(results);
     logLowRatingAlertOutcome({
       feedbackId: input.feedbackId,
       status,

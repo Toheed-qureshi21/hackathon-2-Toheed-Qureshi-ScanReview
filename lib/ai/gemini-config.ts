@@ -1,6 +1,13 @@
 import { z } from "zod";
 
-export const GEMINI_REVIEW_MODEL = "gemini-2.5-flash";
+/** Primary production review-draft model. */
+export const GEMINI_REVIEW_MODEL = "gemini-3.5-flash-lite";
+/** Used only when the primary model is unavailable (404 / not found). */
+export const GEMINI_REVIEW_FALLBACK_MODEL = "gemini-3.1-flash-lite";
+export const GEMINI_REVIEW_MODELS = [
+  GEMINI_REVIEW_MODEL,
+  GEMINI_REVIEW_FALLBACK_MODEL,
+] as const;
 export const GEMINI_TIMEOUT_MS = 10_000;
 export const GEMINI_MAX_OUTPUT_TOKENS = 400;
 export const REVIEW_DRAFT_MAX_CHARS = 1000;

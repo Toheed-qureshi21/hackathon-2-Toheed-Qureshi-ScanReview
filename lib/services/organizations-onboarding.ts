@@ -100,8 +100,7 @@ export async function createOrganizationFromOnboarding(
   const alertRecipient =
     input.alertRecipient === "manager" ? "MANAGER_PENDING" : "ADMIN";
 
-  const adminAlertEmail =
-    input.alertRecipient === "me" ? (user.email?.trim() || null) : null;
+  const adminAlertEmail = user.email?.trim() || null;
 
   const created = await prisma.$transaction(async (tx) => {
     const organization = await tx.organization.create({

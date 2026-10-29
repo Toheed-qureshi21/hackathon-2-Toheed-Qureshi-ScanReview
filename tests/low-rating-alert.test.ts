@@ -161,7 +161,9 @@ describe("resolveAlertRecipient", () => {
       [{ role: "ADMIN", alertEmail: ADMIN_EMAIL }],
     );
     assert.equal(result.ok, true);
-    if (result.ok) assert.equal(result.email, MANAGER_EMAIL);
+    if (result.ok) {
+      assert.deepEqual(result.emails, [MANAGER_EMAIL, ADMIN_EMAIL]);
+    }
   });
 
   it("prefers an accepted manager alertEmail over pending email", () => {
@@ -176,7 +178,9 @@ describe("resolveAlertRecipient", () => {
       ],
     );
     assert.equal(result.ok, true);
-    if (result.ok) assert.equal(result.email, MANAGER_EMAIL);
+    if (result.ok) {
+      assert.deepEqual(result.emails, [MANAGER_EMAIL, ADMIN_EMAIL]);
+    }
   });
 
   it("falls back to admin alertEmail if pending manager email is missing", () => {
@@ -185,7 +189,7 @@ describe("resolveAlertRecipient", () => {
       [{ role: "ADMIN", alertEmail: ADMIN_EMAIL }],
     );
     assert.equal(result.ok, true);
-    if (result.ok) assert.equal(result.email, ADMIN_EMAIL);
+    if (result.ok) assert.deepEqual(result.emails, [ADMIN_EMAIL]);
   });
 
   it("uses admin member email when ADMIN", () => {
@@ -197,7 +201,7 @@ describe("resolveAlertRecipient", () => {
       [{ role: "ADMIN", alertEmail: ADMIN_EMAIL }],
     );
     assert.equal(result.ok, true);
-    if (result.ok) assert.equal(result.email, ADMIN_EMAIL);
+    if (result.ok) assert.deepEqual(result.emails, [ADMIN_EMAIL]);
   });
 
   it("ignores MANAGER member alertEmail when selection is ADMIN", () => {
@@ -209,7 +213,7 @@ describe("resolveAlertRecipient", () => {
       ],
     );
     assert.equal(result.ok, true);
-    if (result.ok) assert.equal(result.email, ADMIN_EMAIL);
+    if (result.ok) assert.deepEqual(result.emails, [ADMIN_EMAIL]);
   });
 
   it("does not pick an arbitrary admin when multiple distinct admin emails exist", () => {
@@ -229,7 +233,10 @@ describe("resolveAlertRecipient", () => {
       [{ role: "ADMIN", alertEmail: ADMIN_EMAIL }],
     );
     assert.equal(result.ok, true);
-    if (result.ok) assert.notEqual(result.email, GUEST_EMAIL);
+    if (result.ok) {
+      assert.deepEqual(result.emails, [ADMIN_EMAIL]);
+      assert.equal(result.emails.includes(GUEST_EMAIL), false);
+    }
   });
 
   it("returns no_recipient when nothing valid is configured", () => {
@@ -294,7 +301,7 @@ describe("deliverLowRatingAlert", () => {
         return { ok: true };
       },
     });
-    assert.deepEqual(sent, [MANAGER_EMAIL]);
+    assert.deepEqual(sent, [MANAGER_EMAIL, ADMIN_EMAIL]);
   });
 
   it("does not send to a guest-supplied email", async () => {

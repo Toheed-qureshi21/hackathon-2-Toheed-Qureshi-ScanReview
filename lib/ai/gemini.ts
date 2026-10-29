@@ -9,7 +9,10 @@ import {
   type GeminiGenerateContentFn,
 } from "@/lib/ai/gemini-call";
 
-export { GEMINI_REVIEW_MODEL } from "@/lib/ai/gemini-config";
+export {
+  GEMINI_REVIEW_FALLBACK_MODEL,
+  GEMINI_REVIEW_MODEL,
+} from "@/lib/ai/gemini-config";
 export type { GeminiDraftResult };
 
 const defaultGenerateContent: GeminiGenerateContentFn = async (input) => {

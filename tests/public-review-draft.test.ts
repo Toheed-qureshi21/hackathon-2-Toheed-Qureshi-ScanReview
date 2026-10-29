@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import { composePublicReviewDraft } from "@/lib/ai/review-draft-compose";
 import {
+  GEMINI_REVIEW_FALLBACK_MODEL,
   GEMINI_REVIEW_MODEL,
   getGeminiEnv,
   REVIEW_DRAFT_MAX_CHARS,
@@ -237,15 +238,56 @@ describe("composePublicReviewDraft", () => {
     assert.deepEqual(malformed, { ok: false, reason: "malformed" });
   });
 
-  it("classifies a missing model as model_unavailable without substituting another model", async () => {
+  it("retries gemini-3.1-flash-lite only when gemini-3.5-flash-lite is unavailable", async () => {
+    const models: string[] = [];
     const result = await runGeminiReviewDraft({
       systemInstruction: "sys",
       userText: "user",
       generateContent: async (input) => {
-        assert.equal(input.model, "gemini-2.5-flash");
-        throw new Error("404 NOT_FOUND model gemini-2.5-flash");
+        models.push(input.model);
+        if (input.model === GEMINI_REVIEW_MODEL) {
+          throw new Error(`404 NOT_FOUND model ${GEMINI_REVIEW_MODEL}`);
+        }
+        assert.equal(input.model, GEMINI_REVIEW_FALLBACK_MODEL);
+        return "Fallback review text.";
       },
     });
+    assert.deepEqual(models, [
+      GEMINI_REVIEW_MODEL,
+      GEMINI_REVIEW_FALLBACK_MODEL,
+    ]);
+    assert.equal(result.ok, true);
+    if (result.ok) assert.equal(result.text, "Fallback review text.");
+  });
+
+  it("does not fall back on timeout or provider failure", async () => {
+    const models: string[] = [];
+    const failed = await runGeminiReviewDraft({
+      systemInstruction: "sys",
+      userText: "user",
+      generateContent: async (input) => {
+        models.push(input.model);
+        throw new Error("provider-secret-body 401");
+      },
+    });
+    assert.deepEqual(models, [GEMINI_REVIEW_MODEL]);
+    assert.deepEqual(failed, { ok: false, reason: "failed" });
+  });
+
+  it("returns model_unavailable when both listed models are missing", async () => {
+    const models: string[] = [];
+    const result = await runGeminiReviewDraft({
+      systemInstruction: "sys",
+      userText: "user",
+      generateContent: async (input) => {
+        models.push(input.model);
+        throw new Error(`404 NOT_FOUND model ${input.model}`);
+      },
+    });
+    assert.deepEqual(models, [
+      GEMINI_REVIEW_MODEL,
+      GEMINI_REVIEW_FALLBACK_MODEL,
+    ]);
     assert.deepEqual(result, { ok: false, reason: "model_unavailable" });
   });
 });

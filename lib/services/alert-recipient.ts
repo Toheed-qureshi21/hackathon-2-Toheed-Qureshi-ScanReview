@@ -13,7 +13,7 @@ export type AlertRecipientMember = {
 };
 
 export type AlertRecipientResult =
-  | { ok: true; email: string }
+  | { ok: true; emails: string[] }
   | { ok: false; reason: "no_recipient" };
 
 function validEmail(value: string | null | undefined): string | null {
@@ -57,9 +57,9 @@ function uniqueManagerAlertEmail(
  * Trusted alert recipient from organization configuration + membership.
  * Guest-supplied addresses are never considered.
  *
- * 1. MANAGER_PENDING: unique accepted MANAGER `alertEmail` when present;
- *    otherwise `Organization.pendingManagerEmail`; otherwise unique admin
- *    `Member.alertEmail`. Enum stays MANAGER_PENDING after invite accept.
+ * 1. MANAGER_PENDING: unique accepted MANAGER `alertEmail` when present,
+ *    otherwise `Organization.pendingManagerEmail`, then the unique admin
+ *    `Member.alertEmail` so the admin still receives a copy.
  * 2. ADMIN: unique administrator `Member.alertEmail` only.
  *
  * Never pick an arbitrary member or a guest-supplied address.
@@ -68,19 +68,30 @@ export function resolveAlertRecipient(
   organization: AlertRecipientOrganization,
   members: AlertRecipientMember[],
 ): AlertRecipientResult {
+  const emails: string[] = [];
+  const seen = new Set<string>();
+  const add = (value: string | null) => {
+    if (!value) return;
+    const key = value.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    emails.push(value);
+  };
+
   if (organization.alertRecipient === "MANAGER_PENDING") {
     const acceptedManager = uniqueManagerAlertEmail(members);
-    if (acceptedManager) return { ok: true, email: acceptedManager };
-    const pending = validEmail(organization.pendingManagerEmail);
-    if (pending) return { ok: true, email: pending };
-    const adminFallback = uniqueAdminAlertEmail(members);
-    if (adminFallback) return { ok: true, email: adminFallback };
-    return { ok: false, reason: "no_recipient" };
+    add(acceptedManager);
+    if (!acceptedManager) {
+      add(validEmail(organization.pendingManagerEmail));
+    }
   }
 
-  const adminEmail = uniqueAdminAlertEmail(members);
-  if (adminEmail) return { ok: true, email: adminEmail };
-  return { ok: false, reason: "no_recipient" };
+  add(uniqueAdminAlertEmail(members));
+
+  if (emails.length === 0) {
+    return { ok: false, reason: "no_recipient" };
+  }
+  return { ok: true, emails };
 }
 
 /** Skip duplicate alerts from the guest UI's contact-sharing second POST. */

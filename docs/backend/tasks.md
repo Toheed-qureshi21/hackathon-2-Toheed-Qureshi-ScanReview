@@ -129,7 +129,7 @@
 
 ## Phase 7 — Gemini review-draft slice
 
-- [x] Implement server-only Gemini adapter using the installed `@google/genai` version. *(`@google/genai` 2.32.0; model `gemini-2.5-flash` — no silent substitute.)*
+- [x] Implement server-only Gemini adapter using the installed `@google/genai` version. *(`@google/genai` 2.32.0; primary `gemini-3.5-flash-lite`, fallback `gemini-3.1-flash-lite` only on model-unavailable.)*
 - [x] Validate rating/comment and bound input/output size. Treat guest comments as untrusted data, not instructions.
 - [x] Generate grounded draft text without inventing visit details.
 - [x] Add timeout/provider-error/rate-limit handling and public abuse controls. *(~5/token and ~15/IP per 10 minutes, process-local; not shared across Vercel isolates.)*

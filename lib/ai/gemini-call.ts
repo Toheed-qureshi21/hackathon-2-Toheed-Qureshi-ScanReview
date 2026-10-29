@@ -1,6 +1,6 @@
 import {
   GEMINI_MAX_OUTPUT_TOKENS,
-  GEMINI_REVIEW_MODEL,
+  GEMINI_REVIEW_MODELS,
   GEMINI_TIMEOUT_MS,
 } from "@/lib/ai/gemini-config";
 import { sanitizeReviewDraftText } from "@/lib/ai/review-draft-content";
@@ -64,19 +64,33 @@ export async function runGeminiReviewDraft(input: {
   const timer = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
 
   try {
-    const raw = await input.generateContent({
-      model: GEMINI_REVIEW_MODEL,
-      systemInstruction: input.systemInstruction,
-      userText: input.userText,
-      abortSignal: controller.signal,
-      timeoutMs: GEMINI_TIMEOUT_MS,
-      maxOutputTokens: GEMINI_MAX_OUTPUT_TOKENS,
-    });
-    const text = sanitizeReviewDraftText(raw);
-    if (!text) return { ok: false, reason: "malformed" };
-    return { ok: true, text };
-  } catch (error) {
-    return { ok: false, reason: classifyGeminiError(error) };
+    let lastUnavailable = false;
+    for (const model of GEMINI_REVIEW_MODELS) {
+      try {
+        const raw = await input.generateContent({
+          model,
+          systemInstruction: input.systemInstruction,
+          userText: input.userText,
+          abortSignal: controller.signal,
+          timeoutMs: GEMINI_TIMEOUT_MS,
+          maxOutputTokens: GEMINI_MAX_OUTPUT_TOKENS,
+        });
+        const text = sanitizeReviewDraftText(raw);
+        if (!text) return { ok: false, reason: "malformed" };
+        return { ok: true, text };
+      } catch (error) {
+        const reason = classifyGeminiError(error);
+        if (reason === "model_unavailable") {
+          lastUnavailable = true;
+          continue;
+        }
+        return { ok: false, reason };
+      }
+    }
+    return {
+      ok: false,
+      reason: lastUnavailable ? "model_unavailable" : "failed",
+    };
   } finally {
     clearTimeout(timer);
   }

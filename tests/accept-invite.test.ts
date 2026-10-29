@@ -156,6 +156,8 @@ describe("accepted manager alert recipient", () => {
       ],
     );
     assert.equal(result.ok, true);
-    if (result.ok) assert.equal(result.email, EMAIL);
+    if (result.ok) {
+      assert.deepEqual(result.emails, [EMAIL, "admin@venue.test"]);
+    }
   });
 });

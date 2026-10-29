@@ -48,7 +48,7 @@
 | `/login` | `login.html` (+ `#signup`) | Not implemented (404) |
 | `/accept-invite` | `accept-invite.html` | Not implemented |
 | `/dashboard/onboarding` | `onboarding.html` | Implemented (dashboard shell) |
-| `/dashboard` | `dashboard.html` | Not implemented |
+| `/dashboard` | `dashboard.html` | Implemented (mock data, QR manager) |
 | `/feedback/[orgId]/[tableId]` | `feedback.html` | Not implemented |
 | `/feedback/.../review` | `review.html` | Not implemented |
 | `/auth/confirm` | PRD only | Not implemented |
@@ -127,16 +127,16 @@
 
 ## Phase 5 — Dashboard and QR management UI (`dashboard.html`)
 
-- [ ] Reproduce dashboard layout, navigation, summary cards, feedback list, and QR-management areas present in the reference.
-- [ ] Add typed mock organization, spot, and feedback data in an isolated mock-data module.
-- [ ] Display rating, configured spot label, and timestamp.
-- [ ] Implement local search/filter/sort controls only if shown in the reference or required by the PRD.
-- [ ] Implement empty, loading, and error presentation states.
-- [ ] Implement spot/QR selection and detail states shown in the reference.
-- [ ] Implement QR preview with one high-contrast QR code per detail view; never place a logo over the code.
-- [ ] Implement print/download affordances. If the real QR URL/token generation is not implemented yet, use an explicit demo placeholder rather than implying the code is production-ready.
-- [ ] Keep manager/admin permission differences as UI states only if needed for the reference; server authorization is deferred.
-- [ ] Verify responsive table/list behavior and keyboard accessibility.
+- [x] Reproduce dashboard layout, navigation, summary cards, feedback list, and QR-management areas present in the reference.
+- [x] Add typed mock organization, spot, and feedback data in an isolated mock-data module.
+- [x] Display rating, configured spot label, and timestamp.
+- [x] Implement local search/filter/sort controls only if shown in the reference or required by the PRD.
+- [x] Implement empty, loading, and error presentation states.
+- [x] Implement spot/QR selection and detail states shown in the reference.
+- [x] Implement QR preview with one high-contrast QR code per detail view; never place a logo over the code.
+- [x] Implement print/download affordances. If the real QR URL/token generation is not implemented yet, use an explicit demo placeholder rather than implying the code is production-ready.
+- [x] Keep manager/admin permission differences as UI states only if needed for the reference; server authorization is deferred.
+- [x] Verify responsive table/list behavior and keyboard accessibility.
 
 **Exit criteria:** Dashboard can be demonstrated with mock data and all visible local controls behave predictably.
 

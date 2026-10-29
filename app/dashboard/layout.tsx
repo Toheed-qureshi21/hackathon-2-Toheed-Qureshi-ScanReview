@@ -1,3 +1,4 @@
+import { DashboardSearchProvider } from "@/components/dashboard/dashboard-search-context";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 
 export default function DashboardLayout({
@@ -5,5 +6,9 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <DashboardShell>{children}</DashboardShell>;
+  return (
+    <DashboardSearchProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </DashboardSearchProvider>
+  );
 }

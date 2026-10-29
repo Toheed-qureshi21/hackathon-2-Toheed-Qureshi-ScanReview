@@ -1,15 +1,33 @@
 "use client";
 
+import { ThemeToggle } from "@/components/landing/theme-toggle";
+import { useDashboardSearch } from "@/components/dashboard/dashboard-search-context";
 import { BrandLink } from "@/components/ui/brand-link";
 import { Button } from "@/components/ui/button";
+import {
+  LOW_RATING_ALERT_COUNT,
+  mockOrganization,
+} from "@/lib/mocks/dashboard";
 import { cn } from "@/lib/utils";
-import { Menu, X } from "lucide-react";
+import {
+  LayoutDashboard,
+  MessageSquare,
+  Bell,
+  QrCode,
+  FilePen,
+  Users,
+  Settings,
+  Menu,
+  X,
+} from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   useCallback,
   useEffect,
   useId,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
@@ -20,18 +38,98 @@ type DashboardShellProps = {
   children: ReactNode;
 };
 
-/** Minimal dashboard chrome for UI-first flows (full dashboard in Phase 5). */
+type NavItem = {
+  href: string;
+  label: string;
+  icon: ReactNode;
+  badge?: number;
+  previewOnly?: boolean;
+};
+
+const WORKSPACE_NAV: NavItem[] = [
+  {
+    href: "/dashboard",
+    label: "Overview",
+    icon: <LayoutDashboard size={18} strokeWidth={1.75} aria-hidden />,
+    previewOnly: true,
+  },
+  {
+    href: "/dashboard#feedback",
+    label: "Guest feedback",
+    icon: <MessageSquare size={18} strokeWidth={1.75} aria-hidden />,
+    badge: LOW_RATING_ALERT_COUNT,
+  },
+  {
+    href: "/dashboard",
+    label: "Low-rating alerts",
+    icon: <Bell size={18} strokeWidth={1.75} aria-hidden />,
+    previewOnly: true,
+  },
+  {
+    href: "/dashboard",
+    label: "QR codes",
+    icon: <QrCode size={18} strokeWidth={1.75} aria-hidden />,
+  },
+  {
+    href: "/dashboard",
+    label: "Review drafts",
+    icon: <FilePen size={18} strokeWidth={1.75} aria-hidden />,
+    previewOnly: true,
+  },
+];
+
+const MANAGE_NAV: NavItem[] = [
+  {
+    href: "/dashboard",
+    label: "Team members",
+    icon: <Users size={18} strokeWidth={1.75} aria-hidden />,
+    previewOnly: true,
+  },
+  {
+    href: "/dashboard",
+    label: "Settings",
+    icon: <Settings size={18} strokeWidth={1.75} aria-hidden />,
+    previewOnly: true,
+  },
+  {
+    href: "/dashboard/onboarding",
+    label: "Business onboarding",
+    icon: <QrCode size={18} strokeWidth={1.75} aria-hidden />,
+  },
+];
+
+function isNavActive(pathname: string, label: string): boolean {
+  if (label === "Business onboarding") {
+    return pathname.startsWith("/dashboard/onboarding");
+  }
+  if (label === "QR codes") {
+    return pathname === "/dashboard";
+  }
+  return false;
+}
+
+/** Dashboard chrome aligned with scanreview-design/dashboard.html (UI-only). */
 export function DashboardShell({ children }: DashboardShellProps) {
+  const pathname = usePathname();
+  const { globalSearch, setGlobalSearch } = useDashboardSearch();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const [isDesktop, setIsDesktop] = useState(false);
+  const [navToast, setNavToast] = useState<string | null>(null);
   const drawerId = useId();
 
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const breadcrumbPage = pathname.startsWith("/dashboard/onboarding")
+    ? "Onboarding"
+    : "QR code manager";
+  const breadcrumbSection = pathname.startsWith("/dashboard/onboarding")
+    ? "Setup"
+    : "Workspace";
 
   useEffect(() => {
     const mq = window.matchMedia(DESKTOP_DASHBOARD_MQ);
@@ -62,6 +160,12 @@ export function DashboardShell({ children }: DashboardShellProps) {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [drawerOpen, closeDrawer]);
 
+  useEffect(() => {
+    if (!navToast) return;
+    const t = window.setTimeout(() => setNavToast(null), 2400);
+    return () => window.clearTimeout(t);
+  }, [navToast]);
+
   const drawerBackdrop =
     mounted && drawerOpen
       ? createPortal(
@@ -74,6 +178,43 @@ export function DashboardShell({ children }: DashboardShellProps) {
           document.body,
         )
       : null;
+
+  function renderNavItem(item: NavItem) {
+    const active = isNavActive(pathname, item.label);
+    const className = cn("dashboard-nav-link", active && "active");
+
+    if (item.previewOnly) {
+      return (
+        <button
+          key={item.label}
+          type="button"
+          className={className}
+          onClick={() => {
+            setNavToast(`${item.label} — demo preview only`);
+            closeDrawer();
+          }}
+        >
+          <span className="dashboard-nav-icon">{item.icon}</span>
+          <span className="dashboard-nav-text">{item.label}</span>
+        </button>
+      );
+    }
+
+    return (
+      <Link
+        key={item.label}
+        href={item.href}
+        className={className}
+        onClick={closeDrawer}
+      >
+        <span className="dashboard-nav-icon">{item.icon}</span>
+        <span className="dashboard-nav-text">{item.label}</span>
+        {item.badge ? (
+          <span className="dashboard-nav-badge">{item.badge}</span>
+        ) : null}
+      </Link>
+    );
+  }
 
   return (
     <div
@@ -92,16 +233,54 @@ export function DashboardShell({ children }: DashboardShellProps) {
       >
         <div className="dashboard-sidebar-body">
           <BrandLink href="/" className="dashboard-brand" label="ScanReview home" />
-          <p className="dashboard-sidebar-label">Setup</p>
-          <nav className="dashboard-nav" aria-label="Dashboard sections">
-            <Link
-              href="/dashboard/onboarding"
-              className="dashboard-nav-link active"
-              onClick={closeDrawer}
-            >
-              Business onboarding
-            </Link>
+          <button
+            type="button"
+            className="dashboard-workspace"
+            onClick={() =>
+              setNavToast("Workspace switcher — demo preview only")
+            }
+          >
+            <span className="dashboard-avatar" aria-hidden="true">
+              BB
+            </span>
+            <span className="dashboard-workspace-copy">
+              <strong>{mockOrganization.name}</strong>
+              <span>{mockOrganization.workspaceSubtitle}</span>
+            </span>
+          </button>
+          <p className="dashboard-sidebar-label">Workspace</p>
+          <nav className="dashboard-nav" aria-label="Workspace navigation">
+            {WORKSPACE_NAV.map(renderNavItem)}
           </nav>
+          <p className="dashboard-sidebar-label dashboard-sidebar-label--manage">
+            Manage
+          </p>
+          <nav className="dashboard-nav" aria-label="Manage navigation">
+            {MANAGE_NAV.map(renderNavItem)}
+          </nav>
+        </div>
+        <div className="dashboard-sidebar-bottom noprint">
+          <div className="dashboard-help-card">
+            <strong>Need a hand?</strong>
+            <p className="hint">Get help setting up your feedback experience.</p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setNavToast("Help center — demo preview only")}
+            >
+              Visit help center ↗
+            </Button>
+          </div>
+          <div className="dashboard-profile">
+            <span className="dashboard-avatar dashboard-avatar--profile">
+              AM
+            </span>
+            <div className="dashboard-workspace-copy">
+              <strong>Alex Morgan</strong>
+              <span>Restaurant manager</span>
+            </div>
+          </div>
         </div>
       </aside>
       <div className="dashboard-main">
@@ -123,10 +302,27 @@ export function DashboardShell({ children }: DashboardShellProps) {
             )}
           </Button>
           <p className="dashboard-breadcrumb">
-            Dashboard <span aria-hidden="true">/</span>{" "}
-            <strong>Onboarding</strong>
+            {breadcrumbSection} <span aria-hidden="true">›</span>{" "}
+            <strong>{breadcrumbPage}</strong>
           </p>
+          <div className="dashboard-top-actions">
+            <label className="dashboard-search">
+              <span className="sr-only">Search feedback</span>
+              <input
+                type="search"
+                value={globalSearch}
+                onChange={(e) => setGlobalSearch(e.target.value)}
+                placeholder="Search feedback…"
+              />
+            </label>
+            <ThemeToggle />
+          </div>
         </header>
+        {navToast ? (
+          <p className="dashboard-nav-toast hint" role="status">
+            {navToast}
+          </p>
+        ) : null}
         <div className="dashboard-content">{children}</div>
       </div>
     </div>

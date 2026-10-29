@@ -152,3 +152,18 @@ When finishing a task, report:
 - Which checks were run and their results.
 - Any unfinished work or limitations.
 - Whether any behavior still uses mock data.
+
+Backend integration strategy
+- Backend work is integrated feature by feature, end to end. Do not implement the entire backend first and defer all frontend integration.
+- Before implementation, audit the actual repository, confirm architecture and API contracts, and identify dependencies/open decisions.
+- For each approved feature slice, implement only the required schema/migration, Zod validation, server-only service logic, Route Handler, tests, Axios API function, React Query hook, and UI integration. Verify that slice before moving to the next.
+- Keep docs/backend/tasks.md as the backend checklist and docs/frontend/tasks.md as the frontend checklist. Update only tasks that were actually verified.
+- The existing .cursor/rules/ui-first.mdc remains in force until the user explicitly approves backend integration and names the first slice.
+Database access and no-RLS policy
+- This project does not use PostgreSQL Row-Level Security (RLS). Do not add RLS policies or treat RLS as the authorization layer.
+- Enforce all request validation with Zod in server-side Route Handlers and/or their server-only helpers/services. Client-side validation is UX only and never a security boundary.
+- Enforce authorization in server code on every protected request. Verify the Supabase Auth identity, then resolve organization membership and role from trusted database state before reading or mutating organization-scoped records.
+- Never trust client-supplied userId, organizationId, role, spot ownership, recipient email, or invite role to establish authorization. Derive scope from the verified session and database membership, or from a verified public token/invitation.
+- Every protected endpoint must have tests for unauthenticated access, wrong organization, wrong role, and attempts to tamper with IDs. Public guest endpoints must have tests for invalid tokens and abuse limits.
+- Prisma and privileged Supabase clients must be server-only. Never expose database credentials or the Supabase service-role key in client bundles or NEXT_PUBLIC_* variables. Do not log secrets or unnecessary guest contact details.
+- Because RLS is not a backstop, do not create a database query path that bypasses the authorization helper for organization-scoped data. Keep Route Handlers thin and centralize repeated auth/authorization checks.

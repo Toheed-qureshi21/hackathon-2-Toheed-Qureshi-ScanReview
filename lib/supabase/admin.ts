@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { logDisabledEnv } from "@/lib/env/log-missing";
 import { getPublicEnv } from "@/lib/env/public";
 
 let adminClient: SupabaseClient | null = null;
@@ -14,7 +15,9 @@ export function getSupabaseAdminClient(): SupabaseClient {
 
   const secretKey = process.env.SUPABASE_SECRET_KEY?.trim();
   if (!secretKey) {
-    throw new Error("Missing SUPABASE_SECRET_KEY for server-side Storage.");
+    const message = "Missing SUPABASE_SECRET_KEY for server-side Storage.";
+    logDisabledEnv({ disabled: ["SUPABASE_SECRET_KEY"], message });
+    throw new Error(message);
   }
 
   const { NEXT_PUBLIC_SUPABASE_URL } = getPublicEnv();

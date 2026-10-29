@@ -267,7 +267,7 @@ export function GuestReviewDrafter({
   return (
     <>
       <GuestFeedbackHeader />
-      <main className="wrap guest-main guest-review-main">
+      <main id="main-content" className="wrap guest-main guest-review-main" tabIndex={-1}>
         <div className="guest-review-meta">
           <span className="pill">
             {context.orgName} · {context.spotDisplayName}

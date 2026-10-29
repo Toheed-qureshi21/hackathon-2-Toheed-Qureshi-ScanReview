@@ -1,6 +1,7 @@
 import "server-only";
 
-import { getTrustedAppOrigin } from "@/lib/env/app-origin";
+import { getAuthConfirmRedirectUrl } from "@/lib/env/app-origin";
+import { MissingAppOriginError } from "@/lib/env/trusted-origin";
 import { prisma } from "@/lib/db/prisma";
 import { bindManagerInviteAuth } from "@/lib/invites/bind-manager-invite-auth";
 import { supabaseManagerInviteAuth } from "@/lib/invites/manager-invite-auth";
@@ -75,6 +76,20 @@ export async function inviteManagerForOrganization(
     );
   }
 
+  let redirectTo: string;
+  try {
+    redirectTo = getAuthConfirmRedirectUrl();
+  } catch (error) {
+    if (error instanceof MissingAppOriginError) {
+      throw new ManagerInviteError(
+        "APP_ORIGIN_MISCONFIGURED",
+        error.message,
+        500,
+      );
+    }
+    throw error;
+  }
+
   await prisma.organization.update({
     where: { id: organizationId },
     data: {
@@ -85,7 +100,6 @@ export async function inviteManagerForOrganization(
     },
   });
 
-  const redirectTo = `${getTrustedAppOrigin()}/auth/confirm`;
   const invited = await auth.inviteUserByEmail(managerEmail, redirectTo);
   const bound = await bindManagerInviteAuth({
     invited,

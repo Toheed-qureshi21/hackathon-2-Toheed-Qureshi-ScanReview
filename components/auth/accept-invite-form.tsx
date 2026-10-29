@@ -25,6 +25,7 @@ export function AcceptInviteForm() {
   const formId = useId();
   const passwordId = `${formId}-password`;
   const confirmId = `${formId}-confirm`;
+  const errorId = `${formId}-error`;
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -134,6 +135,8 @@ export function AcceptInviteForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={busy}
+            aria-invalid={Boolean(error) || (!lengthOk && password.length > 0)}
+            aria-describedby={`${formId}-req-length ${formId}-req-match${error ? ` ${errorId}` : ""}`}
           />
           <Button
             type="button"
@@ -161,6 +164,8 @@ export function AcceptInviteForm() {
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             disabled={busy}
+            aria-invalid={Boolean(error) || (confirm.length > 0 && !matchOk)}
+            aria-describedby={`${formId}-req-match${error ? ` ${errorId}` : ""}`}
           />
           <Button
             type="button"
@@ -189,7 +194,7 @@ export function AcceptInviteForm() {
           </li>
         </ul>
         {error ? (
-          <p className="err" role="alert">
+          <p id={errorId} className="err" role="alert">
             {error}
           </p>
         ) : null}

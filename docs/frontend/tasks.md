@@ -1,7 +1,6 @@
 # ScanReview — UI Implementation Tasks
 
-**Status:** UI-first plan  
-**Scope:** Frontend layouts and local interactions only. Backend implementation is a separate phase.  
+**Status:** UI phases 0–9 complete (Oct 2026). Remaining work is backend integration leftovers in Phase 10 (org settings, remaining mocks).  
 **Sources:** `docs/prd.md`, `docs/trd.md`, external `scanreview-design/` HTML prototypes and branding kit.
 
 ## Working rules
@@ -59,17 +58,19 @@
 
 **Blockers:** None for starting Phase 3. **Recommended before Phase 3:** decide whether to init shadcn/ui now (Phase 1) or continue custom `.btn` / landing components for auth screens.
 
+**Route status update (Oct 2026):** `/auth/login` and `/auth/signup` (with `/login` rewrite), `/accept-invite`, `/auth/confirm`, `/dashboard`, `/dashboard/onboarding`, `/dashboard/feedback`, and guest token/demo routes are implemented. The table above is the Phase 0 snapshot and is superseded.
+
 ## Phase 1 — UI foundation and design system
 
 - [x] Create or refine global CSS variables based on the supplied branding kit.
-- [ ] Configure Tailwind/shadcn theme tokens to consume centralized variables.
+- [x] Configure Tailwind/shadcn theme tokens to consume centralized variables. *(Tailwind v4 `@theme inline` maps `--bg` / `--tx` / fonts. No shadcn `components.json`.)*
 - [x] Establish typography, page background, surface, border, focus, destructive, muted, and accent conventions.
-- [ ] Verify shadcn/ui components use ScanReview styles rather than generic defaults.
+- [x] Verify shadcn/ui components use ScanReview styles rather than generic defaults. *(No Radix/shadcn init; custom `components/ui/button.tsx` uses ScanReview `.btn` tokens.)*
 - [x] Establish shared layout/container patterns and responsive breakpoints consistent with the references.
 - [x] Establish reusable button, input, label, textarea, card, badge, dialog/sheet, and feedback-state patterns where needed.
 - [x] Add or refine shared navigation/footer/layout components only where supported by the references.
 - [x] Confirm keyboard focus, contrast, semantic labels, and reduced-motion behavior.
-- [ ] Capture or document baseline visual checks at mobile and desktop widths.
+- [x] Capture or document baseline visual checks at mobile and desktop widths. *(Oct 2026: desktop landing/login; ~390px hamburger nav.)*
 
 **Exit criteria:** Shared styling is centralized and the first page can be implemented without duplicating brand tokens.
 
@@ -183,30 +184,59 @@
 
 ## Phase 8 — Shared interaction polish and accessibility
 
-- [ ] Audit buttons, links, menus, dialogs, forms, and interactive cards for keyboard behavior.
-- [ ] Add clear validation, loading, empty, success, and error states where relevant.
-- [ ] Check focus visibility and semantic labels.
-- [ ] Check contrast against the branding kit.
-- [ ] Respect reduced-motion preferences.
-- [ ] Confirm no page uses a broad `"use client"` directive when only a child needs it.
-- [ ] Confirm shadcn/ui components are styled through project tokens and classes.
-- [ ] Check responsive layouts at representative mobile, tablet, and desktop widths.
-- [ ] Remove accidental placeholder copy, broken links, console errors, and unused components.
+- [x] Audit buttons, links, menus, dialogs, forms, and interactive cards for keyboard behavior.
+- [x] Add clear validation, loading, empty, success, and error states where relevant.
+- [x] Check focus visibility and semantic labels.
+- [x] Check contrast against the branding kit.
+- [x] Respect reduced-motion preferences.
+- [x] Confirm no page uses a broad `"use client"` directive when only a child needs it.
+- [x] Confirm shadcn/ui components are styled through project tokens and classes. *(Custom primitives; see Phase 1.)*
+- [x] Check responsive layouts at representative mobile, tablet, and desktop widths.
+- [x] Remove accidental placeholder copy, broken links, console errors, and unused components.
+
+**Verified (Oct 2026):** Skip-to-content on landing, auth, dashboard, and guest pages; dashboard drawer Tab trap + Escape restores the menu button; `aria-current="page"` on live nav; preview-only nav labeled for assistive tech; form `aria-invalid` / `aria-describedby` on login, invite, onboarding name, and guest contact. Global `:focus-visible` and `prefers-reduced-motion` remain in `globals.css`. Removed unused client-side demo QR generator and the extra `DashboardHome` wrapper. Corrected copy that implied the feedback API was not connected.
 
 ## Phase 9 — UI verification and handoff
 
-- [ ] Run the existing lint command.
-- [ ] Run the existing TypeScript/type-check command, if configured.
-- [ ] Run available unit/component tests.
-- [ ] Run the production build.
-- [ ] Manually verify every implemented route and primary interaction.
-- [ ] Compare each page against its HTML reference.
-- [ ] Document visual deviations and remaining UI gaps.
-- [ ] Confirm all demo/mock behavior is clearly identified in code and does not imply real persistence.
-- [ ] Update this checklist accurately.
-- [ ] Prepare a backend integration handoff listing required DTOs, API contracts, and mutation/query needs without implementing them yet.
+- [x] Run the existing lint command.
+- [x] Run the existing TypeScript/type-check command, if configured. *(No dedicated typecheck script; `npm run build` runs TypeScript.)*
+- [x] Run available unit/component tests.
+- [x] Run the production build.
+- [x] Manually verify every implemented route and primary interaction. *(Unauthenticated browser paths; authenticated dashboard/onboarding/Add QR/live Gemini/Brevo/SMTP not exercised in this pass.)*
+- [x] Compare each page against its HTML reference.
+- [x] Document visual deviations and remaining UI gaps.
+- [x] Confirm all demo/mock behavior is clearly identified in code and does not imply real persistence.
+- [x] Update this checklist accurately.
+- [x] Prepare a backend integration handoff listing required DTOs, API contracts, and mutation/query needs without implementing them yet. *(Handoff is now the remaining Phase 10 items: org read/update, team/settings, live alert counts.)*
 
 **UI phase completion criteria:** All agreed UI routes are implemented and reviewed against the references; checks are reported accurately; mock data is isolated; no backend functionality has been silently introduced.
+
+### Phase 9 verification record (2026-10-29)
+
+**Checks:** `npm test` (225 pass), `npm run lint`, `npm run build` (TypeScript included).
+
+**Browser (localhost, no admin session):** `/` skip-link + landing; `/login` rewrite → `/auth/login`; login empty submit → `Enter a valid email address.` with `aria-invalid`; `/auth/signup`; `/accept-invite` without session → invalid-invite copy; `/dashboard` → `/auth/login?next=/dashboard`; `/feedback/demo?org=Cafe%20Nova&label=Table&n=7&demo=1` 1★ skip-contact → review; local draft generate/edit/copy with “not AI” disclaimer; `/feedback/not-a-uuid/badtoken` → real invalid-token copy (not demo wording). Mobile ~390px: hamburger `Open menu`.
+
+**API-connected vs mock (do not treat unit tests as live service proof):**
+
+| Surface | Data source | Live this pass? |
+| --- | --- | --- |
+| Login/signup | Supabase Auth | Form/validation only; no successful sign-in |
+| Onboarding + initial QRs | `POST /api/organizations` | Not (needs session + DB + Storage) |
+| Dashboard spots / Add QR / print | `GET`/`POST /api/spots` | Not (needs admin session) |
+| Guest token rating | `GET /api/public/spot`, `POST /api/public/feedback` | Invalid-token 404 UI only |
+| Guest demo rating | Local; labeled demo | Yes |
+| Token review drafts | `POST /api/public/reviews/draft` (Gemini) | Not (needs valid token + Gemini) |
+| Demo review drafts | Local templates; labeled | Yes |
+| Manager invite accept | Auth password + `POST /api/auth/accept-invite` | Invalid/unauthenticated path only |
+| Dashboard feedback list | `GET /api/feedback` | Not (needs session) |
+| Low-rating alert count on QR page | `LOW_RATING_ALERT_COUNT` mock | Labeled demo figure |
+| Overview / alerts / drafts / team / settings nav | Preview-only | Labeled; not connected |
+| Brevo alerts / invite SMTP | Server | Not |
+
+**Meaningful HTML-reference deviations (kept, not redesigned):** Landing H1 is “Resolve Guest Issues…” vs reference “Hear about a bad meal while the guest is still at the table.”; hero demo is auto-loop (“AUTO DEMO”) vs interactive stars; mobile nav hamburger &lt;768px vs reference inline links; auth lives at `/auth/login` with `/login` rewrite; dashboard QR manager is the `/dashboard` home (reference Overview is preview-only); guest header uses Lucide mark + theme toggle; Add QR Code is one-click next numbered spot (no location-name modal from `dashboard.html`); `prefers-reduced-motion` skips high-rating auto-redirect.
+
+**Remaining UI gaps:** Live authenticated journeys (signup→onboarding→QR print/download→Add QR→guest URL); live Gemini/Brevo/SMTP; org settings and team pages; replacing the mock alert count.
 
 ## Phase 10 — Backend integration (future; do not start during UI phase)
 
@@ -226,6 +256,6 @@ This phase is intentionally deferred until the UI is reviewed and approved.
 - [x] Connect Axios/React Query for **manager invites** (`POST /api/invites/manager`, `POST /api/auth/accept-invite`, onboarding send/resend + `/accept-invite`). *(Oct 2026)*
 - [ ] Connect Axios/React Query for organization read/update.
 - [ ] Use mutation responses to update React Query cache directly where possible; invalidate only affected data when a safe direct update is not possible.
-- [ ] Implement QR token generation and invite acceptance. *(Gemini review drafts: production token routes call `POST /api/public/reviews/draft`; `/feedback/demo/review` stays local templates. Oct 2026. Brevo alerts: Phase 6.)*
+- [x] Implement QR token generation and invite acceptance. *(Public tokens + accept-invite wired. Gemini: production token routes call `POST /api/public/reviews/draft`; `/feedback/demo/review` stays local templates. Brevo alerts: backend Phase 6. Oct 2026.)*
 - [ ] Add server-side Zod validation, abuse controls, integration tests, and end-to-end tests.
 - [ ] Replace mock data only after the corresponding API is ready and tested.

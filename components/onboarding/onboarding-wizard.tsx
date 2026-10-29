@@ -349,9 +349,11 @@ export function OnboardingWizard() {
             value={org}
             onChange={(e) => setOrg(e.target.value)}
             disabled={submitting}
+            aria-invalid={Boolean(errors.org)}
+            aria-describedby={errors.org ? "ob-org-error" : undefined}
           />
           {errors.org ? (
-            <p className="err" role="alert">
+            <p id="ob-org-error" className="err" role="alert">
               {errors.org}
             </p>
           ) : null}

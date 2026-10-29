@@ -1887,6 +1887,25 @@ textarea {
   border: 0;
 }
 
+.skip-link {
+  position: absolute;
+  left: var(--page-padding-x);
+  top: 0.75rem;
+  z-index: 200;
+  padding: 0.6rem 1rem;
+  border-radius: 12px;
+  background: var(--ac);
+  color: var(--oa);
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-160%);
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: none;
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;

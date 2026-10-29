@@ -174,7 +174,7 @@ export function GuestFeedbackExperience({
   return (
     <>
       <GuestFeedbackHeader />
-      <main className="wrap guest-main guest-main--center">
+      <main id="main-content" className="wrap guest-main guest-main--center" tabIndex={-1}>
         <span className="pill">{context.spotDisplayName}</span>
         <div className="card guest-card">
           <h1>
@@ -241,8 +241,14 @@ export function GuestFeedbackExperience({
                   if (contactError) setContactError("");
                 }}
                 disabled={pending}
+                aria-invalid={Boolean(contactError)}
+                aria-describedby={contactError ? "fb-contact-error" : undefined}
               />
-              <p className="err" role={contactError ? "alert" : undefined}>
+              <p
+                id="fb-contact-error"
+                className="err"
+                role={contactError ? "alert" : undefined}
+              >
                 {contactError}
               </p>
               <div className="acts acts--stack">

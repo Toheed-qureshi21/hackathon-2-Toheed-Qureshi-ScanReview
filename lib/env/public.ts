@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+import {
+  logDisabledEnv,
+  missingKeysFromZodIssues,
+} from "@/lib/env/log-missing";
+
 const publicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
@@ -14,9 +19,10 @@ export function getPublicEnv(): PublicEnv {
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   });
   if (!parsed.success) {
-    throw new Error(
-      "Missing or invalid public Supabase environment variables.",
-    );
+    const disabled = missingKeysFromZodIssues(parsed.error.issues);
+    const message = "Missing or invalid public Supabase environment variables.";
+    logDisabledEnv({ disabled, message });
+    throw new Error(message);
   }
   return parsed.data;
 }

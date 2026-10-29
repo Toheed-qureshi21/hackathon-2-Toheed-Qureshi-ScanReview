@@ -1,5 +1,6 @@
 import { BrandLink } from "@/components/ui/brand-link";
 import { ButtonLink } from "@/components/ui/button";
+import { SkipToContent } from "@/components/ui/skip-link";
 import Link from "next/link";
 import { HeroDemo } from "./hero-demo";
 import { ScrollReveal } from "./scroll-reveal";
@@ -16,9 +17,10 @@ function CheckIcon() {
 export function LandingPage() {
   return (
     <div className="landing-root">
+      <SkipToContent />
       <ScrollReveal />
       <SiteHeader />
-      <main className="wrap">
+      <main id="main-content" className="wrap" tabIndex={-1}>
         <section className="hero">
           <div className="hero-copy">
             <div className="eyebrow">

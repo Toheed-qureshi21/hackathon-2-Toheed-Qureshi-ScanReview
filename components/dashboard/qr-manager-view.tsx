@@ -320,7 +320,7 @@ export function QrManagerView() {
                   <span className="stat-label">Low-rating alerts</span>
                 </div>
                 <div className="qr-stat-value">{LOW_RATING_ALERT_COUNT}</div>
-                <div className="qr-stat-note">Demo until feedback API</div>
+                <div className="qr-stat-note">Demo figure, not live alerts</div>
               </article>
               <article className="qr-stat">
                 <div className="qr-stat-top">
@@ -613,8 +613,9 @@ export function QrManagerView() {
         </section>
 
         <p className="qr-disclaimer">
-          QR images are loaded from your saved Supabase Storage bucket. Guest
-          feedback counts remain demo until the feedback API is connected.
+          QR images load from your saved storage bucket. The low-rating alert
+          total on this page is a demo figure. Live ratings are on Guest
+          feedback.
         </p>
       </div>
 

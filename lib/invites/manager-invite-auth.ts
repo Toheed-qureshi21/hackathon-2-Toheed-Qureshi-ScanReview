@@ -17,6 +17,8 @@ export const supabaseManagerInviteAuth: ManagerInviteAuthPort = {
   async inviteUserByEmail(email, redirectTo) {
     const admin = getSupabaseAdminClient();
     const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+      // Absolute /auth/confirm origin from APP_URL. Email href still follows
+      // the dashboard invite template (token_hash) and Site URL allowlist.
       redirectTo,
     });
     if (error || !data.user?.id) {

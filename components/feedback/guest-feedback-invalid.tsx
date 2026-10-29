@@ -8,12 +8,12 @@ type GuestFeedbackInvalidProps = {
 
 export function GuestFeedbackInvalid({
   title = "This feedback link isn’t valid",
-  message = "The demo QR link may be incomplete or expired. Scan a current code from your table, or ask staff for help.",
+  message = "This QR link may be incomplete or expired. Scan a current code from your table, or ask staff for help.",
 }: GuestFeedbackInvalidProps) {
   return (
     <>
       <GuestFeedbackHeader />
-      <main className="wrap guest-main guest-main--center">
+      <main id="main-content" className="wrap guest-main guest-main--center" tabIndex={-1}>
         <div className="card guest-card">
           <h1>{title}</h1>
           <p className="hint" style={{ marginTop: "0.65rem" }}>

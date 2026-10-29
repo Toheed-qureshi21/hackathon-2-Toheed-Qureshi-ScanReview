@@ -1,12 +1,12 @@
-import { DashboardHome } from "@/components/dashboard/dashboard-home";
+import { QrManagerView } from "@/components/dashboard/qr-manager-view";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "QR Code Manager · ScanReview",
   description:
-    "Manage demo QR codes and preview guest feedback for your workspace.",
+    "Manage QR codes and guest feedback links for your workspace.",
 };
 
 export default function DashboardPage() {
-  return <DashboardHome />;
+  return <QrManagerView />;
 }

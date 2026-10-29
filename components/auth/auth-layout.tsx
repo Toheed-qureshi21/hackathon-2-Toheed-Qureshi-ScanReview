@@ -1,4 +1,5 @@
 import { SiteHeader } from "@/components/landing/site-header";
+import { SkipToContent } from "@/components/ui/skip-link";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
@@ -34,8 +35,9 @@ export function AuthLayout({
 
   return (
     <div className={cn("auth-page", className)}>
+      <SkipToContent />
       <SiteHeader />
-      <main className="wrap auth">
+      <main id="main-content" className="wrap auth" tabIndex={-1}>
         <div className={cn("card auth-card", cardClassName)}>
           {hasHeader ? (
             <header className="auth-card-header">

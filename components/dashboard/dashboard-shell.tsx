@@ -5,12 +5,12 @@ import { ThemeToggle } from "@/components/landing/theme-toggle";
 import { useDashboardSearch } from "@/components/dashboard/dashboard-search-context";
 import { BrandLink } from "@/components/ui/brand-link";
 import { Button } from "@/components/ui/button";
+import { SkipToContent } from "@/components/ui/skip-link";
 import { useCurrentUser } from "@/hooks/queries/use-current-user";
 import {
   initialsFromLabel,
   roleLabel,
 } from "@/lib/auth/display-name";
-import { LOW_RATING_ALERT_COUNT } from "@/lib/mocks/dashboard";
 import { ApiClientError } from "@/lib/api/api-error";
 import { cn } from "@/lib/utils";
 import {
@@ -30,6 +30,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
@@ -37,6 +38,8 @@ import {
 import { createPortal } from "react-dom";
 
 const DESKTOP_DASHBOARD_MQ = "(min-width: 768px)";
+const DRAWER_FOCUSABLE =
+  "a[href], button:not([disabled]):not([tabindex='-1'])";
 
 type DashboardShellProps = {
   children: ReactNode;
@@ -61,7 +64,6 @@ const WORKSPACE_NAV: NavItem[] = [
     href: "/dashboard/feedback",
     label: "Guest feedback",
     icon: <MessageSquare size={18} strokeWidth={1.75} aria-hidden />,
-    badge: LOW_RATING_ALERT_COUNT,
   },
   {
     href: "/dashboard",
@@ -153,6 +155,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
     : "Set up your business";
   const profileInitials = initialsFromLabel(profileName);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -195,9 +199,35 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
   useEffect(() => {
     if (!drawerOpen) return;
+
+    const getItems = () =>
+      Array.from(
+        sidebarRef.current?.querySelectorAll<HTMLElement>(DRAWER_FOCUSABLE) ??
+          [],
+      );
+
+    getItems()[0]?.focus();
+
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") closeDrawer();
+      if (e.key === "Escape") {
+        closeDrawer();
+        menuButtonRef.current?.focus();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const items = getItems();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
+
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [drawerOpen, closeDrawer]);
@@ -231,8 +261,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
           key={item.label}
           type="button"
           className={className}
+          aria-label={`${item.label} (preview only)`}
           onClick={() => {
-            setNavToast(`${item.label} — demo preview only`);
+            setNavToast(`${item.label} — preview only, not connected yet`);
             closeDrawer();
           }}
         >
@@ -247,6 +278,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         key={item.label}
         href={item.href}
         className={className}
+        aria-current={active ? "page" : undefined}
         onClick={closeDrawer}
       >
         <span className="dashboard-nav-icon">{item.icon}</span>
@@ -262,8 +294,10 @@ export function DashboardShell({ children }: DashboardShellProps) {
     <div
       className={cn("dashboard-app", drawerOpen && "dashboard-app--drawer-open")}
     >
+      <SkipToContent />
       {drawerBackdrop}
       <aside
+        ref={sidebarRef}
         id={drawerId}
         className={cn(
           "dashboard-sidebar noprint",
@@ -279,9 +313,10 @@ export function DashboardShell({ children }: DashboardShellProps) {
             type="button"
             className="dashboard-workspace"
             onClick={() =>
-              setNavToast("Workspace switcher — demo preview only")
+              setNavToast("Workspace switcher — preview only, not connected yet")
             }
           >
+            <span className="sr-only">Preview only. </span>
             <span className="dashboard-avatar" aria-hidden="true">
               {userLoading ? "…" : workspaceInitials}
             </span>
@@ -328,6 +363,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
       <div className="dashboard-main">
         <header className="dashboard-topbar noprint">
           <Button
+            ref={menuButtonRef}
             type="button"
             variant="ghost"
             size="sm"
@@ -368,7 +404,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
             {navToast}
           </p>
         ) : null}
-        <div className="dashboard-content">{children}</div>
+        <main id="main-content" className="dashboard-content" tabIndex={-1}>
+          {children}
+        </main>
       </div>
     </div>
   );

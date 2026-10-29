@@ -31,6 +31,8 @@ export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
   const nameId = `${formId}-name`;
   const emailId = `${formId}-email`;
   const passwordId = `${formId}-password`;
+  const errorId = `${formId}-error`;
+  const infoId = `${formId}-info`;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -169,6 +171,8 @@ export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={submitting}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? errorId : undefined}
             />
           </div>
         ) : null}
@@ -183,6 +187,8 @@ export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={submitting}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? errorId : undefined}
         />
         <label htmlFor={passwordId}>Password</label>
         <div className="pw">
@@ -195,6 +201,8 @@ export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={submitting}
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? errorId : undefined}
           />
           <Button
             type="button"
@@ -213,12 +221,12 @@ export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
           </Button>
         </div>
         {error ? (
-          <p className="err" role="alert">
+          <p id={errorId} className="err" role="alert">
             {error}
           </p>
         ) : null}
         {infoMessage ? (
-          <p className="auth-demo-notice" role="status">
+          <p id={infoId} className="auth-demo-notice" role="status">
             {infoMessage}
           </p>
         ) : null}

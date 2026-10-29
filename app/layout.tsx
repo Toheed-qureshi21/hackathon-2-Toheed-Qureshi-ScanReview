@@ -33,7 +33,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex w-full max-w-full flex-col overflow-x-clip">
+        {children}
+      </body>
     </html>
   );
 }

@@ -14,7 +14,7 @@ function CheckIcon() {
 
 export function LandingPage() {
   return (
-    <>
+    <div className="landing-root">
       <ScrollReveal />
       <SiteHeader />
       <main className="wrap">
@@ -24,7 +24,7 @@ export function LandingPage() {
               <span className="eyebrow-dot" aria-hidden="true" />
               FEEDBACK THAT REACHES YOUR TEAM IN TIME
             </div>
-            <h1>Hear about a bad meal while the guest is still at the table.</h1>
+            <h1>Hear about a bad experience while the guest is still at the table.</h1>
             <p className="lead">
               Put a QR code on every table. A 1 or 2 star rating alerts your
               manager with the exact table in seconds, and every guest gets an
@@ -241,6 +241,6 @@ export function LandingPage() {
           </div>
         </div>
       </footer>
-    </>
+    </div>
   );
 }

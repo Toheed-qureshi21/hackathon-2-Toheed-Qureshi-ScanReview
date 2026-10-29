@@ -3468,3 +3468,159 @@ body:has(.guest-feedback-root) {
 .guest-main .guest-card {
   text-align: left;
 }
+
+/* Review drafter (review.html) */
+.guest-review-main {
+  max-width: 520px;
+  text-align: left;
+}
+
+.guest-review-card {
+  text-align: left;
+}
+
+.guest-review-card h1 {
+  margin: 0;
+}
+
+.guest-review-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.92rem;
+  margin: 1.1rem 0 0.4rem;
+}
+
+.guest-review-chips {
+  margin-bottom: 0.25rem;
+}
+
+.guest-review-generate {
+  margin-top: 1rem;
+}
+
+.guest-review-out {
+  margin-top: 1rem;
+  animation: slide 0.4s both;
+}
+
+.guest-review-out--hidden {
+  display: none;
+}
+
+.guest-review-draft {
+  resize: none;
+  line-height: 1.6;
+  min-height: 9rem;
+}
+
+.guest-review-count {
+  text-align: right;
+  margin-top: 0.35rem;
+}
+
+.guest-review-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.guest-review-acts {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0;
+}
+
+.guest-review-acts .btn {
+  flex: 1 1 calc(50% - 0.3rem);
+  min-height: 48px;
+  min-width: 0;
+}
+
+.guest-review-post {
+  margin-top: 0;
+  min-height: 48px;
+}
+
+@media (min-width: 480px) {
+  .guest-review-actions {
+    gap: 0.85rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .guest-review-actions {
+    gap: 1.15rem;
+  }
+
+  .guest-review-post {
+    margin-top: 0.35rem;
+  }
+}
+
+.guest-review-post-hint {
+  margin-top: 0.6rem;
+  text-align: center;
+}
+
+.writing-dots::after {
+  content: "";
+  animation: writing-dots 1s steps(4) infinite;
+}
+
+@keyframes writing-dots {
+  0% {
+    content: "";
+  }
+
+  25% {
+    content: ".";
+  }
+
+  50% {
+    content: "..";
+  }
+
+  75% {
+    content: "...";
+  }
+}
+
+.btn.copy-ok {
+  animation: pop 0.4s both;
+}
+
+.guest-review-post.nudge {
+  animation: review-post-nudge 1s 2;
+}
+
+@keyframes review-post-nudge {
+  0% {
+    box-shadow: 0 0 0 0 var(--ac);
+  }
+
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guest-review-out {
+    animation: none !important;
+  }
+
+  .guest-review-post.nudge {
+    animation: none !important;
+  }
+
+  .btn.copy-ok {
+    animation: none !important;
+  }
+
+  .writing-dots::after {
+    animation: none !important;
+    content: "...";
+  }
+}

@@ -50,7 +50,7 @@
 | `/dashboard/onboarding` | `onboarding.html` | Implemented (dashboard shell) |
 | `/dashboard` | `dashboard.html` | Implemented (mock data, QR manager) |
 | `/feedback/demo` (+ PRD-shaped `/feedback/[orgId]/[spotId]`) | `feedback.html` | Implemented; aligned to reference (Oct 2026) |
-| `/feedback/demo/review` (+ `.../review`) | `review.html` | Handoff stub only (Phase 7) |
+| `/feedback/demo/review` (+ `.../review`) | `review.html` | Implemented (local demo drafts) |
 | `/auth/confirm` | PRD only | Not implemented |
 
 **Page-by-page plan (UI phase, in checklist order):** Phase 1 finish shadcn/token wiring → Phase 3 login/signup/accept-invite → Phase 4 onboarding → Phase 5 dashboard + `lib/mocks/` → Phase 6 guest feedback → Phase 7 review drafter → Phases 8–9 polish and verification.
@@ -154,21 +154,23 @@
 
 **Exit criteria:** Both low-rating and high-rating guest flows can be demonstrated end to end with local state.
 
-**Verified (Oct 2026):** `npm run lint` and `npm run build` pass; manual checks on `/feedback/demo` and `/feedback/org-bloom-birch/t07` for 1★ skip → review (`rating=1`), 5★ auto-redirect (~1.6s), dual aria-live copy, theme toggle, and keyboard star navigation. **Known deviations:** brand links to `/` (not `#`); `prefers-reduced-motion` skips high-path auto-redirect (Continue remains); contact share adds format validation; global `.btn::after` shimmer on primary buttons; review route remains Phase 7 handoff stub (not full `review.html`).
+**Verified (Oct 2026):** `npm run lint` and `npm run build` pass; manual checks on `/feedback/demo` and `/feedback/org-bloom-birch/t07` for 1★ skip → review (`rating=1`), 5★ auto-redirect (~1.6s), dual aria-live copy, theme toggle, and keyboard star navigation. **Known deviations:** brand links to `/` (not `#`); `prefers-reduced-motion` skips high-path auto-redirect (Continue remains); contact share adds format validation; global `.btn::after` shimmer on primary buttons.
 
 ## Phase 7 — AI review drafter UI (`review.html`)
 
-- [ ] Reproduce review-drafter layout from the HTML reference.
-- [ ] Display the rating and optional comment from the prior local flow where feasible.
-- [ ] Implement optional comment entry.
-- [ ] Implement generate/loading/error states using clearly simulated demo behavior.
-- [ ] Implement editable draft text.
-- [ ] Implement copy-to-clipboard behavior and visible feedback.
-- [ ] Show the “Post your review” control only when a mock organization review URL is configured.
-- [ ] Open the configured link safely in a new tab with `rel="noopener noreferrer"`.
-- [ ] Do not call Gemini or publish a review during the UI phase.
+- [x] Reproduce review-drafter layout from the HTML reference.
+- [x] Display the rating and optional comment from the prior local flow where feasible.
+- [x] Implement optional comment entry.
+- [x] Implement generate/loading/error states using clearly simulated demo behavior.
+- [x] Implement editable draft text.
+- [x] Implement copy-to-clipboard behavior and visible feedback.
+- [x] Show the “Post your review” control only when a mock organization review URL is configured.
+- [x] Open the configured link safely in a new tab with `rel="noopener noreferrer"`.
+- [x] Do not call Gemini or publish a review during the UI phase.
 
 **Exit criteria:** Draft generation is visibly simulated, editing/copying works, and review-link visibility follows the PRD.
+
+**Verified (Oct 2026):** `npm run lint` and `npm run build` pass; browser checks on demo review (with/without `link` query), mock-id review (`org-bloom-birch/t07`), invalid demo params, chip + generate + draft text, `note` query pre-fill, and Post link when `https://` URL is configured. **Known deviations:** extra demo disclaimer line; header matches guest feedback (Lucide mark + theme toggle) vs reference text ★; guest feedback page gradients not applied on review route; `.btn::after` shimmer on primary buttons; “Post your review” appears after first generate (same as reference `#out` visibility).
 
 ## Phase 8 — Shared interaction polish and accessibility
 

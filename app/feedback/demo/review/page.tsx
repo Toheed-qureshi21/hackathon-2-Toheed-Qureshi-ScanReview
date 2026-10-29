@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Your review draft | ScanReview",
-  description: "Review drafter handoff (demo UI).",
+  description: "AI review drafter demo — local templates, no sign-up.",
 };
 
 function ReviewFallback() {

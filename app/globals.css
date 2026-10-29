@@ -1572,6 +1572,10 @@ textarea {
   margin-bottom: 1rem;
 }
 
+.dashboard-feedback-page .dash-feedback-panel {
+  margin-top: 0.5rem;
+}
+
 .dash-feedback-body {
   padding: 0 1.25rem 1.25rem;
 }

@@ -54,7 +54,7 @@ const WORKSPACE_NAV: NavItem[] = [
     previewOnly: true,
   },
   {
-    href: "/dashboard#feedback",
+    href: "/dashboard/feedback",
     label: "Guest feedback",
     icon: <MessageSquare size={18} strokeWidth={1.75} aria-hidden />,
     badge: LOW_RATING_ALERT_COUNT,
@@ -102,6 +102,9 @@ function isNavActive(pathname: string, label: string): boolean {
   if (label === "Business onboarding") {
     return pathname.startsWith("/dashboard/onboarding");
   }
+  if (label === "Guest feedback") {
+    return pathname.startsWith("/dashboard/feedback");
+  }
   if (label === "QR codes") {
     return pathname === "/dashboard";
   }
@@ -126,7 +129,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
   const breadcrumbPage = pathname.startsWith("/dashboard/onboarding")
     ? "Onboarding"
-    : "QR code manager";
+    : pathname.startsWith("/dashboard/feedback")
+      ? "Guest feedback"
+      : "QR code manager";
   const breadcrumbSection = pathname.startsWith("/dashboard/onboarding")
     ? "Setup"
     : "Workspace";

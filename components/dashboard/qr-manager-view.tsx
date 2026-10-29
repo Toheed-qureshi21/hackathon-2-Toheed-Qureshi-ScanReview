@@ -6,12 +6,10 @@ import {
   generateDemoQrDataUrl,
   QrCodeVisual,
 } from "@/components/dashboard/qr-code-visual";
-import { RecentFeedbackPanel } from "@/components/dashboard/recent-feedback-panel";
 import {
   LOW_RATING_ALERT_COUNT,
   mockOrganization,
   mockQrSpots,
-  mockRecentFeedback,
   QR_AREAS,
   type MockQrSpot,
   type QrSpotStatus,
@@ -37,11 +35,7 @@ function makeId(): string {
   return `qr-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-type QrManagerViewProps = {
-  globalSearch: string;
-};
-
-export function QrManagerView({ globalSearch }: QrManagerViewProps) {
+export function QrManagerView() {
   const [spots, setSpots] = useState<MockQrSpot[]>(() =>
     mockQrSpots.map((s) => ({ ...s })),
   );
@@ -587,12 +581,6 @@ export function QrManagerView({ globalSearch }: QrManagerViewProps) {
             )}
           </aside>
         </section>
-
-        <RecentFeedbackPanel
-          items={mockRecentFeedback}
-          query={globalSearch}
-          loading={bootLoading}
-        />
 
         <p className="qr-disclaimer">
           Dashboard preview · Sample data. QR codes and feedback shown here are

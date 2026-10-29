@@ -5,6 +5,8 @@ type RecentFeedbackPanelProps = {
   items: MockFeedbackItem[];
   query: string;
   loading?: boolean;
+  /** When false, omit the in-panel title (page provides its own heading). */
+  showTitle?: boolean;
 };
 
 function Stars({ rating }: { rating: number }) {
@@ -23,6 +25,7 @@ export function RecentFeedbackPanel({
   items,
   query,
   loading = false,
+  showTitle = true,
 }: RecentFeedbackPanelProps) {
   const q = query.trim().toLowerCase();
   const filtered = q
@@ -40,16 +43,22 @@ export function RecentFeedbackPanel({
       className="dash-feedback-panel panel"
       aria-labelledby="dash-feedback-title"
     >
-      <div className="panel-head">
-        <div>
-          <h2 id="dash-feedback-title" className="panel-title">
-            Recent guest feedback
-          </h2>
-          <p className="panel-subtitle">
-            Demo list — ratings and spot names reflect mock data only.
-          </p>
+      {showTitle ? (
+        <div className="panel-head">
+          <div>
+            <h2 id="dash-feedback-title" className="panel-title">
+              Recent guest feedback
+            </h2>
+            <p className="panel-subtitle">
+              Demo list — ratings and spot names reflect mock data only.
+            </p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <h2 id="dash-feedback-title" className="sr-only">
+          Recent guest feedback list
+        </h2>
+      )}
       <div className="dash-feedback-body">
         {loading ? (
           <p className="hint dash-feedback-state">Loading preview…</p>

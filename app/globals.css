@@ -3154,4 +3154,317 @@ textarea {
   .footer-group a:hover {
     transform: none;
   }
+
+  .fb-bar-fill {
+    animation: none !important;
+    width: 100%;
+  }
+
+  .guest-card {
+    animation: none !important;
+  }
+
+  .fb-star.on svg {
+    animation: none !important;
+  }
+
+  .fb-word.pulse,
+  .fb-msg.pulse,
+  .fb-rev {
+    animation: none !important;
+  }
+
+  .fb-star:hover {
+    transform: none;
+  }
+}
+
+/* Guest feedback (feedback.html) */
+body:has(.guest-feedback-root) {
+  background:
+    radial-gradient(
+      ellipse at 8% 4%,
+      color-mix(in srgb, var(--ac) 9%, transparent),
+      transparent 34rem
+    ),
+    radial-gradient(
+      ellipse at 95% 28%,
+      color-mix(in srgb, var(--st) 9%, transparent),
+      transparent 30rem
+    ),
+    var(--bg);
+}
+
+.guest-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 76px;
+  padding-block: max(0.9rem, env(safe-area-inset-top)) 0.9rem;
+}
+
+.guest-brand {
+  min-width: 0;
+}
+
+.brand-app {
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+.guest-mark svg {
+  width: 16px;
+  height: 16px;
+}
+
+.guest-main {
+  max-width: 520px;
+  margin-inline: auto;
+  padding: 0.5rem max(1.25rem, env(safe-area-inset-left, 0px)) 3rem
+    max(1.25rem, env(safe-area-inset-right, 0px));
+}
+
+.guest-main--center {
+  text-align: center;
+}
+
+.guest-card {
+  position: relative;
+  overflow: hidden;
+  margin-top: 1rem;
+  text-align: center;
+  border-radius: 28px;
+  padding: 2rem 1.4rem 1.6rem;
+  box-shadow: var(--sh), 0 26px 60px color-mix(in srgb, var(--ac) 8%, transparent);
+  animation: guest-rise 0.7s cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.guest-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: linear-gradient(90deg, var(--ac), var(--st));
+}
+
+.guest-card h1 {
+  margin: 0.2rem 0 0;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.guest-card h1 .org {
+  color: var(--ac);
+}
+
+.guest-lead {
+  margin-top: 0.4rem;
+}
+
+.guest-demo-tag {
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+}
+
+.fb-stars {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 0.15rem;
+  margin: 1.6rem 0 0.6rem;
+  isolation: isolate;
+}
+
+.fb-stars::before {
+  content: "";
+  position: absolute;
+  inset: -14px 4%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--st) 24%, transparent),
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.fb-stars.lit::before {
+  opacity: 1;
+}
+
+.fb-star {
+  background: none;
+  border: 0;
+  padding: 0.3rem;
+  cursor: pointer;
+  width: clamp(44px, 13.5vw, 62px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  color: var(--st);
+  transition: transform 0.2s;
+}
+
+.fb-star:active {
+  transform: scale(0.9);
+}
+
+.fb-star svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--mu);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: fill 0.2s, stroke 0.2s, filter 0.3s;
+}
+
+.fb-star.on svg {
+  fill: var(--st);
+  stroke: var(--st);
+  filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--st) 55%, transparent));
+  animation: pop 0.45s both;
+  animation-delay: calc(var(--i) * 60ms);
+}
+
+@media (hover: hover) {
+  .fb-star:hover {
+    transform: translateY(-2px);
+  }
+
+  .fb-star:not(.on):hover svg,
+  .fb-star:not(.on):has(~ .fb-star:hover) svg {
+    stroke: var(--st);
+    fill: color-mix(in srgb, var(--st) 26%, transparent);
+  }
+}
+
+.fb-star:focus-visible {
+  outline: 3px solid var(--ac);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.fb-star:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.fb-word {
+  font: 800 1.5rem/1.2 var(--font-bricolage), system-ui, sans-serif;
+  letter-spacing: -0.03em;
+  min-height: 1.8rem;
+  margin: 0;
+  transition: color 0.25s;
+}
+
+.fb-word.has {
+  color: var(--st);
+}
+
+.fb-msg {
+  min-height: 1.55em;
+  margin: 0.15rem 0 0;
+}
+
+.fb-word.pulse,
+.fb-msg.pulse {
+  animation: guest-fade-up 0.4s both;
+}
+
+.fb-rev {
+  margin-top: 1.4rem;
+  padding-top: 1.3rem;
+  border-top: 1px solid var(--bd);
+  text-align: left;
+  animation: slide 0.4s both;
+}
+
+.fb-rev--low h2 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.fb-apology {
+  margin-top: 0.3rem;
+}
+
+.fb-bar {
+  height: 5px;
+  background: var(--bd);
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+.fb-bar-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--ac), var(--st));
+  animation: fb-bar-fill 1.6s linear forwards;
+}
+
+@keyframes guest-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes guest-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fb-bar-fill {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+.acts--stack {
+  flex-direction: column;
+}
+
+.acts--stack .btn {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.guest-review-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.guest-review-stars {
+  color: var(--st);
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+}
+
+.guest-main .guest-card {
+  text-align: left;
 }

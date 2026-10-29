@@ -49,8 +49,8 @@
 | `/accept-invite` | `accept-invite.html` | Not implemented |
 | `/dashboard/onboarding` | `onboarding.html` | Implemented (dashboard shell) |
 | `/dashboard` | `dashboard.html` | Implemented (mock data, QR manager) |
-| `/feedback/[orgId]/[tableId]` | `feedback.html` | Not implemented |
-| `/feedback/.../review` | `review.html` | Not implemented |
+| `/feedback/demo` (+ PRD-shaped `/feedback/[orgId]/[spotId]`) | `feedback.html` | Implemented (demo QR + mock IDs) |
+| `/feedback/demo/review` (+ `.../review`) | `review.html` | Handoff stub only (Phase 7) |
 | `/auth/confirm` | PRD only | Not implemented |
 
 **Page-by-page plan (UI phase, in checklist order):** Phase 1 finish shadcn/token wiring → Phase 3 login/signup/accept-invite → Phase 4 onboarding → Phase 5 dashboard + `lib/mocks/` → Phase 6 guest feedback → Phase 7 review drafter → Phases 8–9 polish and verification.
@@ -142,15 +142,15 @@
 
 ## Phase 6 — Guest feedback UI (`feedback.html`)
 
-- [ ] Reproduce the public, no-login mobile rating experience.
-- [ ] Implement accessible 1–5 star selection.
-- [ ] Implement selected, hover, focus, and disabled states.
-- [ ] Implement the 1–2 star recovery branch and apology message.
-- [ ] Implement optional contact fields and the “I don't want to share my contact” path.
-- [ ] Implement the 3–5 star path that proceeds directly to the review drafter.
-- [ ] Carry the selected rating and optional comment into local UI state/navigation.
-- [ ] Implement local success/error states without persisting feedback or sending an email.
-- [ ] Verify phone-sized layouts and keyboard operation.
+- [x] Reproduce the public, no-login mobile rating experience.
+- [x] Implement accessible 1–5 star selection.
+- [x] Implement selected, hover, focus, and disabled states.
+- [x] Implement the 1–2 star recovery branch and apology message.
+- [x] Implement optional contact fields and the “I don't want to share my contact” path.
+- [x] Implement the 3–5 star path that proceeds directly to the review drafter.
+- [x] Carry the selected rating and optional comment into local UI state/navigation.
+- [x] Implement local success/error states without persisting feedback or sending an email.
+- [x] Verify phone-sized layouts and keyboard operation.
 
 **Exit criteria:** Both low-rating and high-rating guest flows can be demonstrated end to end with local state.
 

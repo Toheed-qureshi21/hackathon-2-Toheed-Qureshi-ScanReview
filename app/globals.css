@@ -668,12 +668,31 @@ textarea {
   padding: 1.5rem 1rem 1.25rem;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   background: var(--sf);
   border-right: 1px solid var(--bd);
 }
 
+.dashboard-sidebar-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.dashboard-sidebar .brand {
+  flex: 0 0 auto;
+  max-width: none;
+  width: 100%;
+  align-self: flex-start;
+  justify-content: flex-start;
+}
+
 .dashboard-brand {
-  padding: 0 0.75rem 1.75rem;
+  padding: 0 0.75rem 1.25rem;
 }
 
 .dashboard-sidebar-label {
@@ -689,6 +708,8 @@ textarea {
 .dashboard-nav {
   display: grid;
   gap: 0.25rem;
+  width: 100%;
+  flex: 0 0 auto;
 }
 
 .dashboard-nav-link {
@@ -727,11 +748,44 @@ textarea {
   z-index: 10;
   display: flex;
   align-items: center;
+  gap: 0.65rem;
   min-height: 4.5rem;
   padding: 0 clamp(1.25rem, 3.4vw, 3rem);
   border-bottom: 1px solid var(--bd);
   background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(16px);
+}
+
+.dashboard-menu-btn {
+  display: none;
+  flex-shrink: 0;
+  margin-inline: -0.35rem 0;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  place-items: center;
+}
+
+.dashboard-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--tx) 42%, transparent);
+  cursor: pointer;
+  animation: dashboard-backdrop-in 0.2s ease;
+}
+
+@keyframes dashboard-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .dashboard-breadcrumb {
@@ -755,19 +809,39 @@ textarea {
 }
 
 @media (max-width: 767px) {
-  .dashboard-sidebar {
-    position: static;
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--bd);
+  .dashboard-menu-btn {
+    display: inline-flex;
   }
 
-  .dashboard-app {
-    flex-direction: column;
+  .dashboard-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 40;
+    width: min(var(--dashboard-sidebar), 86vw);
+    max-width: 100%;
+    transform: translateX(-100%);
+    transition: transform 0.26s ease;
+    box-shadow: none;
+    border-right: 1px solid var(--bd);
+    border-bottom: none;
+    visibility: hidden;
+  }
+
+  .dashboard-sidebar--open {
+    transform: translateX(0);
+    box-shadow: var(--sh);
+    visibility: visible;
   }
 
   .dashboard-main {
     margin-left: 0;
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  .dashboard-sidebar {
+    visibility: visible;
   }
 }
 

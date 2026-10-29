@@ -1,10 +1,12 @@
 "use client";
 
 import {
+  demoGuestFeedbackPath,
   demoGuestFeedbackUrl,
   formatSpotName,
 } from "@/lib/onboarding/constants";
 import QRCode from "qrcode";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type OnboardingQrGridProps = {
@@ -16,10 +18,12 @@ type OnboardingQrGridProps = {
 
 function QrCard({
   href,
+  linkHref,
   title,
   delayMs,
 }: {
   href: string;
+  linkHref: string;
   title: string;
   delayMs: number;
 }) {
@@ -40,9 +44,9 @@ function QrCard({
   }, [href]);
 
   return (
-    <a
+    <Link
       className="q"
-      href={href}
+      href={linkHref}
       title="Preview guest page (demo route)"
       style={{ animationDelay: `${delayMs}ms` }}
     >
@@ -56,7 +60,7 @@ function QrCard({
       </div>
       <span className="q-cta">Scan and Rate us</span>
       <b className="q-spot">{title}</b>
-    </a>
+    </Link>
   );
 }
 
@@ -74,6 +78,12 @@ export function OnboardingQrGrid({
       {Array.from({ length: count }, (_, i) => {
         const spotNumber = i + 1;
         const title = formatSpotName(spotLabel, spotNumber);
+        const linkHref = demoGuestFeedbackPath(
+          org,
+          spotLabel,
+          spotNumber,
+          reviewLink,
+        );
         const href = demoGuestFeedbackUrl(
           origin,
           org,
@@ -85,6 +95,7 @@ export function OnboardingQrGrid({
           <QrCard
             key={spotNumber}
             href={href}
+            linkHref={linkHref}
             title={title}
             delayMs={Math.min(spotNumber, 24) * 30}
           />

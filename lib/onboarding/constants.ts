@@ -41,9 +41,7 @@ export function formatSpotName(label: string, number: number): string {
   return `${label} ${number}`;
 }
 
-/** Demo-only guest URL encoded in QR placeholders (not production tokens). */
-export function demoGuestFeedbackUrl(
-  origin: string,
+function demoGuestFeedbackSearch(
   org: string,
   label: string,
   spotNumber: number,
@@ -56,5 +54,26 @@ export function demoGuestFeedbackUrl(
     demo: "1",
   });
   if (reviewLink) params.set("link", reviewLink);
-  return `${origin}/feedback/demo?${params.toString()}`;
+  return params.toString();
+}
+
+/** App Router path for demo guest feedback (use with `Link`). */
+export function demoGuestFeedbackPath(
+  org: string,
+  label: string,
+  spotNumber: number,
+  reviewLink: string,
+): string {
+  return `/feedback/demo?${demoGuestFeedbackSearch(org, label, spotNumber, reviewLink)}`;
+}
+
+/** Demo-only absolute URL encoded in QR placeholders (not production tokens). */
+export function demoGuestFeedbackUrl(
+  origin: string,
+  org: string,
+  label: string,
+  spotNumber: number,
+  reviewLink: string,
+): string {
+  return `${origin}${demoGuestFeedbackPath(org, label, spotNumber, reviewLink)}`;
 }

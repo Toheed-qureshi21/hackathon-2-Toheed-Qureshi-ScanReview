@@ -422,6 +422,222 @@ a {
   font-size: 0.92rem;
 }
 
+.w {
+  width: 100%;
+}
+
+.card {
+  background: var(--sf);
+  border: 1px solid var(--bd);
+  border-radius: 22px;
+  padding: 1.5rem;
+  box-shadow: var(--sh);
+}
+
+.hint {
+  color: var(--mu);
+  font-size: 0.9rem;
+}
+
+.err {
+  color: var(--dg);
+  font-size: 0.88rem;
+  min-height: 1.3em;
+  margin-top: 0.3rem;
+}
+
+label,
+.label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.92rem;
+  margin: 1.1rem 0 0.4rem;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 16px;
+  color: var(--tx);
+  background: var(--bg);
+  border: 1.5px solid var(--bd);
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  min-height: 48px;
+}
+
+textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.acts {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.acts .btn {
+  flex: 1;
+}
+
+.auth-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.auth {
+  display: grid;
+  place-items: start center;
+  padding: 1rem 0 3rem;
+  flex: 1;
+  align-content: start;
+}
+
+.auth-card {
+  width: min(440px, 100%);
+}
+
+.auth-card-header h1 {
+  margin: 0;
+}
+
+.auth-lead {
+  margin: 0.4rem 0 0;
+}
+
+.auth-card-body {
+  min-width: 0;
+}
+
+.auth-footer {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+  text-align: center;
+  color: var(--mu);
+  font-size: 0.9rem;
+}
+
+.auth-demo-notice {
+  color: var(--tx);
+  font-size: 0.88rem;
+  margin-top: 0.75rem;
+  line-height: 1.45;
+}
+
+.auth-demo-hint {
+  margin-top: 1rem;
+  font-size: 0.82rem;
+}
+
+.auth-demo-hint code {
+  font-size: 0.85em;
+  color: var(--tx);
+}
+
+.auth-submit {
+  margin-top: 1.25rem;
+}
+
+.auth-pw-toggle-label {
+  font-size: 0.92rem;
+}
+
+.pw .btn {
+  gap: 0.35rem;
+  padding-inline: 0.65rem;
+}
+
+.seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg);
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  padding: 4px;
+  margin: 1.2rem 0 0;
+}
+
+.seg button {
+  font: inherit;
+  font-weight: 600;
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--mu);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.seg button[aria-selected="true"] {
+  background: var(--sf);
+  color: var(--tx);
+  box-shadow: var(--sh);
+}
+
+.pw {
+  position: relative;
+}
+
+.pw input {
+  padding-right: 5rem;
+}
+
+.pw .btn {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+}
+
+.req {
+  list-style: none;
+  padding: 0;
+  margin: 0.9rem 0 0;
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  color: var(--mu);
+}
+
+.req li::before {
+  content: "○";
+  margin-right: 0.5rem;
+}
+
+.req li.on {
+  color: var(--tx);
+}
+
+.req li.on::before {
+  content: "✓";
+  color: var(--ac);
+  display: inline-block;
+  animation: pop 0.35s;
+}
+
+.auth-success-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--ac);
+  color: var(--oa);
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  margin: 0 auto 1rem;
+  animation: pop 0.5s both;
+}
+
+.auth-panel--center {
+  text-align: center;
+}
+
 .pill {
   display: inline-block;
   background: var(--so);

@@ -124,10 +124,10 @@ export function SiteNav() {
         className="nav-dropdown nav-dropdown--viewport"
         aria-label="Site menu"
       >
-        <MenuItemLink href="/login" onClick={close}>
+        <MenuItemLink href="/auth/login" onClick={close}>
           Log in
         </MenuItemLink>
-        <MenuItemLink href="/login#signup" variant="primary" onClick={close}>
+        <MenuItemLink href="/auth/signup" variant="primary" onClick={close}>
           Get started
         </MenuItemLink>
         <MenuItemButton onClick={cycleTheme}>
@@ -144,10 +144,10 @@ export function SiteNav() {
     <nav className="nav" aria-label="Main">
       <div className="nav-desktop">
         <ThemeToggle />
-        <ButtonLink href="/login" variant="ghost" size="sm">
+        <ButtonLink href="/auth/login" variant="ghost" size="sm">
           Log in
         </ButtonLink>
-        <ButtonLink href="/login#signup" size="sm">
+        <ButtonLink href="/auth/signup" size="sm">
           Get started
         </ButtonLink>
       </div>

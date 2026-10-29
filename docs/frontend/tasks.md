@@ -6,31 +6,58 @@
 
 ## Working rules
 
-- [ ] Read `AGENTS.md`, `.cursor/rules/ui-first.mdc`, `docs/prd.md`, and `docs/trd.md`.
-- [ ] Confirm the external `scanreview-design/` folder is accessible.
-- [ ] Inspect each HTML prototype before implementing its corresponding page.
-- [ ] Keep prototype files and branding assets unchanged.
-- [ ] Use typed mock data and local state during the UI phase.
-- [ ] Do not implement real auth, database operations, API mutations, email, or Gemini integration yet.
-- [ ] Do not use Server Actions.
-- [ ] Update this checklist only after verifying the relevant work.
+- [x] Read `AGENTS.md`, `.cursor/rules/ui-first.mdc` (also mirrored at `.cursor/ui-first.mdc`), `docs/prd.md`, and `docs/trd.md`.
+- [x] Confirm the external `scanreview-design/` folder is accessible.
+- [x] Inspect each HTML prototype before implementing its corresponding page.
+- [x] Keep prototype files and branding assets unchanged.
+- [x] Use typed mock data and local state during the UI phase.
+- [x] Do not implement real auth, database operations, API mutations, email, or Gemini integration yet.
+- [x] Do not use Server Actions.
+- [x] Update this checklist only after verifying the relevant work.
 
 ## Phase 0 — Repository and reference audit
 
-- [ ] Inspect the existing repository structure and current implementation.
-- [ ] Confirm Next.js version, App Router structure, TypeScript strictness, Tailwind setup, shadcn/ui setup, icon package, and available scripts.
-- [ ] Read `docs/prd.md` and `docs/trd.md` and identify the routes/screens that must be represented.
-- [ ] Locate and inspect `scanreview-design/index.html`.
-- [ ] Locate and inspect `scanreview-design/login.html`.
-- [ ] Locate and inspect `scanreview-design/onboarding.html`.
-- [ ] Locate and inspect `scanreview-design/dashboard.html`.
-- [ ] Locate and inspect `scanreview-design/feedback.html`.
-- [ ] Locate and inspect `scanreview-design/review.html`.
-- [ ] Locate and inspect `scanreview-design/accept-invite.html`.
-- [ ] Inspect the branding kit and extract its actual colors, typography, surfaces, radii, borders, and other tokens.
-- [ ] Report existing work, gaps, conflicts, and a page-by-page implementation plan before broad changes.
+- [x] Inspect the existing repository structure and current implementation.
+- [x] Confirm Next.js version, App Router structure, TypeScript strictness, Tailwind setup, shadcn/ui setup, icon package, and available scripts.
+- [x] Read `docs/prd.md` and `docs/trd.md` and identify the routes/screens that must be represented.
+- [x] Locate and inspect `scanreview-design/index.html`.
+- [x] Locate and inspect `scanreview-design/login.html`.
+- [x] Locate and inspect `scanreview-design/onboarding.html`.
+- [x] Locate and inspect `scanreview-design/dashboard.html`.
+- [x] Locate and inspect `scanreview-design/feedback.html`.
+- [x] Locate and inspect `scanreview-design/review.html`.
+- [x] Locate and inspect `scanreview-design/accept-invite.html`.
+- [x] Inspect the branding kit and extract its actual colors, typography, surfaces, radii, borders, and other tokens.
+- [x] Report existing work, gaps, conflicts, and a page-by-page implementation plan before broad changes.
 
 **Exit criteria:** Reference paths and existing project conventions are known; no implementation assumptions are hidden.
+
+### Phase 0 audit record (2026-10-29)
+
+**Repository (verified):** Next.js **16.4.3** App Router; only route **`/`** implemented (`app/page.tsx`, `app/layout.tsx`, `app/globals.css`). TypeScript **`strict: true`**. Tailwind **v4** via `@import "tailwindcss"` and `@tailwindcss/turbopack`. **shadcn/ui not initialized** (no `components.json`, no Radix/shadcn primitives). Icons: **lucide-react**. Scripts: `dev`, `build`, `start`, `lint` only — **no dedicated `typecheck` or test script** (build runs TypeScript). Prisma schema is a **stub** (generator + datasource only). Backend packages present in `package.json` but **unused in app code**. No `app/api/**`, no `proxy.ts`, no Server Actions in TS/TSX.
+
+**Design references (all accessible under `../scanreview-design/`):** `index.html`, `login.html`, `onboarding.html`, `dashboard.html`, `feedback.html`, `review.html`, `accept-invite.html`; branding via `DESIGN.md`, `code.html`, `screen.png`. Extra files not required for MVP UI: `old-home-page.html`.
+
+**Token alignment:** Implemented tokens in `app/globals.css` match HTML prototypes (`light` / `dark` / `natural` on `data-theme`) and `docs/frontend/design.md`. Material-style values in `DESIGN.md` / `code.html` are supplementary; page CSS in HTML prototypes is the layout fidelity source.
+
+**PRD routes vs implementation:**
+
+| Route | Reference | App status |
+| --- | --- | --- |
+| `/` | `index.html` | Implemented (landing) |
+| `/login` | `login.html` (+ `#signup`) | Not implemented (404) |
+| `/accept-invite` | `accept-invite.html` | Not implemented |
+| `/onboarding` | `onboarding.html` | Not implemented |
+| `/dashboard` | `dashboard.html` | Not implemented |
+| `/feedback/[orgId]/[tableId]` | `feedback.html` | Not implemented |
+| `/feedback/.../review` | `review.html` | Not implemented |
+| `/auth/confirm` | PRD only | Not implemented |
+
+**Page-by-page plan (UI phase, in checklist order):** Phase 1 finish shadcn/token wiring → Phase 3 login/signup/accept-invite → Phase 4 onboarding → Phase 5 dashboard + `lib/mocks/` → Phase 6 guest feedback → Phase 7 review drafter → Phases 8–9 polish and verification.
+
+**Known landing deviations (Phase 2, acceptable until polish):** Hero H1 copy uses “bad experience” vs reference “bad meal”; hero demo is an **auto loop** (label “AUTO DEMO”) vs reference **interactive** stars; mobile nav uses **hamburger &lt;768px** vs reference inline links with `.hs` hiding “Log in” only below 520px; CTAs point to `/login` but **404 until Phase 3**. Demo copy uses “Table 7” as **marketing mock**, not org-configured labels (guest flows must use dynamic labels per PRD).
+
+**Blockers:** None for starting Phase 3. **Recommended before Phase 3:** decide whether to init shadcn/ui now (Phase 1) or continue custom `.btn` / landing components for auth screens.
 
 ## Phase 1 — UI foundation and design system
 
@@ -42,7 +69,7 @@
 - [x] Establish reusable button, input, label, textarea, card, badge, dialog/sheet, and feedback-state patterns where needed.
 - [x] Add or refine shared navigation/footer/layout components only where supported by the references.
 - [x] Confirm keyboard focus, contrast, semantic labels, and reduced-motion behavior.
-- [x] Capture or document baseline visual checks at mobile and desktop widths.
+- [ ] Capture or document baseline visual checks at mobile and desktop widths.
 
 **Exit criteria:** Shared styling is centralized and the first page can be implemented without duplicating brand tokens.
 
@@ -61,17 +88,20 @@
 
 ## Phase 3 — Authentication and invite acceptance UI
 
+### Shared auth shell
+- [x] Implement reusable `AuthLayout` with shared card, typography, and form styling tokens (preview on `/login`).
+
 ### Login (`login.html`)
-- [ ] Reproduce the login layout and visual hierarchy.
-- [ ] Implement accessible email/password fields and client-side UX validation.
-- [ ] Implement show/hide password behavior if present in the reference.
-- [ ] Implement disabled/loading/error visual states using clearly simulated local behavior.
-- [ ] Do not connect Supabase Auth during the UI phase.
+- [x] Reproduce the login layout and visual hierarchy.
+- [x] Implement accessible email/password fields and client-side UX validation.
+- [x] Implement show/hide password behavior if present in the reference.
+- [x] Implement disabled/loading/error visual states using clearly simulated local behavior.
+- [x] Do not connect Supabase Auth during the UI phase.
 
 ### Signup
-- [ ] Confirm whether a separate signup design exists in the HTML references or PRD. Reuse the login visual system only if no separate design is supplied.
-- [ ] Implement the signup UI needed by the PRD without inventing unrelated fields.
-- [ ] Keep submission simulated and clearly separate from real authentication.
+- [x] Confirm whether a separate signup design exists in the HTML references or PRD. Reuse the login visual system only if no separate design is supplied.
+- [x] Implement the signup UI needed by the PRD without inventing unrelated fields.
+- [x] Keep submission simulated and clearly separate from real authentication.
 
 ### Accept invite (`accept-invite.html`)
 - [ ] Reproduce manager invite/password setup layout.

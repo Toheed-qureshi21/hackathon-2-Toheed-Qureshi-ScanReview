@@ -32,7 +32,7 @@ export function LandingPage() {
               AI-written review draft they can edit and post.
             </p>
             <div className="cta">
-              <ButtonLink href="/login#signup">Create your QR codes</ButtonLink>
+              <ButtonLink href="/auth/signup">Create your QR codes</ButtonLink>
               <ButtonLink href="#how" variant="ghost">
                 See how it works
               </ButtonLink>
@@ -195,7 +195,7 @@ export function LandingPage() {
 
         <section className="band">
           <h2>See it on your own tables</h2>
-          <ButtonLink href="/login#signup" variant="band">
+          <ButtonLink href="/auth/signup" variant="band">
             Create your QR codes
           </ButtonLink>
           <p>Takes about a minute to set up.</p>
@@ -221,8 +221,8 @@ export function LandingPage() {
               </div>
               <div className="footer-group">
                 <h3>Get started</h3>
-                <Link href="/login">Log in</Link>
-                <Link href="/login#signup">Create your QR codes</Link>
+                <Link href="/auth/login">Log in</Link>
+                <Link href="/auth/signup">Create your QR codes</Link>
               </div>
               <div className="footer-group">
                 <h3>For your team</h3>

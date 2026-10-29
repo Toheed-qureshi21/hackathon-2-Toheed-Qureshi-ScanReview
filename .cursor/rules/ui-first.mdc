@@ -1,0 +1,104 @@
+---
+description: ScanReview UI-first implementation rules. Apply these rules
+  to all frontend and UI tasks until backend integration is explicitly
+  approved.
+alwaysApply: true
+---
+
+# ScanReview UI-First Rules
+
+## Read Before Working
+
+Before implementing or modifying UI, read:
+
+- `AGENTS.md`
+- `docs/prd.md`
+- `docs/trd.md`
+- `docs/frontend/design.md`
+- `docs/frontend/tasks.md`
+
+Use the original HTML prototypes and branding assets from the external
+sibling directory `scanreview-design/`.
+
+If that directory is not accessible from the current workspace, ask
+the user to add it to the workspace or provide its location. Do not
+invent reference paths or recreate unseen designs.
+
+## Current Phase: UI First
+
+Build and refine the frontend before implementing backend behavior.
+
+Use:
+
+- Typed mock data isolated in `lib/mocks/`, `data/mock/`, or the
+  repository's established equivalent.
+- Local React state for UI interactions.
+- Existing components and dependencies.
+- ScanReview design tokens and existing shadcn/ui primitives.
+- Responsive and accessible layouts.
+
+Do not implement real backend integrations unless the user explicitly
+approves the backend phase.
+
+This restriction includes:
+
+- Supabase authentication and session operations.
+- Prisma database reads or writes.
+- Route Handler business logic and API mutations.
+- Brevo email delivery.
+- Gemini API calls.
+- Real backend data fetching and mutations.
+
+Do not use Axios or React Query to imitate backend operations during
+the UI-only phase. Do not add fake network requests.
+
+Never show a mock interaction as confirmation that data was saved
+permanently, a real email was sent, or a real API operation succeeded.
+
+## Next.js Architecture
+
+- Follow Next.js 16 App Router conventions.
+- Prefer Server Components.
+- Use Client Components only where interactivity requires them.
+- Keep `"use client"` boundaries minimal.
+- Use Route Handlers under `app/api/**/route.ts` for backend operations
+  when that phase is approved.
+- Do not use Server Actions for backend operations.
+- Use `proxy.ts`, not legacy `middleware.ts`, when request interception
+  is needed.
+- Always `await cookies()` because `cookies()` is asynchronous.
+
+## Design Rules
+
+- Read `docs/frontend/design.md` before implementing a screen.
+- Inspect the matching HTML prototype in `scanreview-design/`.
+- Use the branding kit and design tokens as the visual source of truth.
+- Keep global design tokens centralized.
+- Use shadcn/ui primitives with ScanReview-specific styling.
+- Do not scatter arbitrary hex colors throughout components.
+- Match reference layouts, typography, spacing, and responsive behavior.
+- Do not modify the original HTML reference files or branding assets.
+
+## Task Tracking
+
+Use `docs/frontend/tasks.md` as the frontend implementation checklist.
+
+Before starting, identify the relevant unfinished tasks and acceptance
+criteria.
+
+After implementation:
+
+- Update only tasks that are actually complete.
+- Preserve all unfinished checkbox states.
+- Do not remove phases, acceptance criteria, or existing requirements.
+- Do not mark a task complete without checking its implementation.
+
+## Scope and Verification
+
+- Inspect existing code and follow repository conventions before editing.
+- Avoid unnecessary dependencies and broad refactors.
+- Keep mock data separate from production logic.
+- Run relevant lint, type-check, test, or build commands when available.
+- Report changed files, checks performed, and remaining limitations.
+- Do not modify the PRD, TRD, or original design references unless
+  explicitly requested.

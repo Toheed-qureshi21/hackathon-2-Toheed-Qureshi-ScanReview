@@ -8,10 +8,11 @@ export function resolvePostAuthPath(
   if (me.pendingManagerInvite && !me.membership) {
     return "/accept-invite";
   }
-  if (nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")) {
-    if (me.membership || nextParam.startsWith("/dashboard/onboarding")) {
-      return nextParam;
-    }
+  if (me.onboardingRequired || !me.membership) {
+    return "/dashboard/onboarding";
   }
-  return me.onboardingRequired ? "/dashboard/onboarding" : "/dashboard";
+  if (nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")) {
+    return nextParam;
+  }
+  return "/dashboard";
 }

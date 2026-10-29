@@ -37,6 +37,13 @@ describe("resolvePostAuthPath", () => {
     );
   });
 
+  it("sends an admin who has not onboarded to onboarding even when next is the dashboard", () => {
+    assert.equal(
+      resolvePostAuthPath(withoutMembership, "/dashboard"),
+      "/dashboard/onboarding",
+    );
+  });
+
   it("sends members to dashboard by default", () => {
     assert.equal(resolvePostAuthPath(withMembership, null), "/dashboard");
   });

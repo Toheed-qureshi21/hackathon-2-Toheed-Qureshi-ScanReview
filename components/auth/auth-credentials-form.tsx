@@ -35,8 +35,10 @@ export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
   const infoId = `${formId}-info`;
 
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(
+    signup ? "" : "qureshitoheed7861@gmail.com",
+  );
+  const [password, setPassword] = useState(signup ? "" : "12345678");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [infoMessage, setInfoMessage] = useState("");

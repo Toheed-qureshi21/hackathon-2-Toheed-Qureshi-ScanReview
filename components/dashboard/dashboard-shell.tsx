@@ -94,6 +94,20 @@ export function DashboardShell({ children }: DashboardShellProps) {
     }
   }, [userError, router]);
 
+  useEffect(() => {
+    if (userLoading || !currentUser) return;
+    if (currentUser.pendingManagerInvite && !currentUser.membership) {
+      router.replace("/accept-invite");
+      return;
+    }
+    if (
+      currentUser.onboardingRequired &&
+      !pathname.startsWith("/dashboard/onboarding")
+    ) {
+      router.replace("/dashboard/onboarding");
+    }
+  }, [currentUser, pathname, router, userLoading]);
+
   const workspaceName =
     currentUser?.membership?.organization.name ??
     (userLoading ? "…" : "Your business");

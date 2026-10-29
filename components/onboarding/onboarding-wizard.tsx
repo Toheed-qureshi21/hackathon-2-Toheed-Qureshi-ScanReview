@@ -102,7 +102,9 @@ export function OnboardingWizard() {
   const [labelPreset, setLabelPreset] = useState<LabelPreset>("Table");
   const [customLabel, setCustomLabel] = useState("");
   const [spotCount, setSpotCount] = useState(10);
-  const [reviewUrl, setReviewUrl] = useState("");
+  const [reviewUrl, setReviewUrl] = useState(
+    "https://maps.app.goo.gl/KDyq5QPbGM9oXhS28",
+  );
   const [alertRecipient, setAlertRecipient] = useState<AlertRecipient>("me");
   const [managerName, setManagerName] = useState("");
   const [managerEmail, setManagerEmail] = useState("");

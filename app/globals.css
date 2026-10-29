@@ -463,7 +463,13 @@ label,
   margin: 1.1rem 0 0.4rem;
 }
 
-input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="url"],
+input[type="number"],
+input[type="tel"],
+input:not([type]),
 select,
 textarea {
   width: 100%;
@@ -816,8 +822,10 @@ textarea {
   border-radius: 11px;
   background: var(--sf);
   color: var(--mu);
+  overflow: hidden;
 }
 
+.dashboard-search input[type="search"],
 .dashboard-search input {
   min-width: 0;
   width: 100%;
@@ -825,9 +833,12 @@ textarea {
   padding: 0;
   min-height: 0;
   border: 0;
+  border-radius: 0;
   background: transparent;
   font-size: 0.78rem;
   color: var(--tx);
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .dashboard-nav-badge {
@@ -1305,22 +1316,36 @@ textarea {
   align-items: center;
   flex: 1 1 8rem;
   min-width: 0;
+  max-width: 100%;
   height: 2.4rem;
   padding: 0 0.65rem;
   border: 1px solid var(--bd);
   border-radius: 10px;
   background: var(--bg);
+  overflow: hidden;
 }
 
-.qr-search input {
+.qr-search input[type="search"] {
   width: 100%;
   min-width: 0;
   margin: 0;
   padding: 0;
   min-height: 0;
   border: 0;
+  border-radius: 0;
   background: transparent;
   font-size: 0.78rem;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.qr-search input[type="search"]::-webkit-search-decoration,
+.qr-search input[type="search"]::-webkit-search-cancel-button,
+.qr-search input[type="search"]::-webkit-search-results-button,
+.qr-search input[type="search"]::-webkit-search-results-decoration {
+  display: none;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .qr-filter {
@@ -1363,6 +1388,30 @@ textarea {
   font-weight: 850;
   border-top: 1px solid var(--bd);
   border-bottom: 1px solid var(--bd);
+}
+
+.qr-check-col {
+  width: 2.5rem;
+}
+
+.qr-table input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  min-width: 1rem;
+  min-height: 1rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--bd);
+  border-radius: 0.125rem;
+  background: var(--sf);
+  accent-color: var(--ac);
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.qr-table input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--ac);
+  outline-offset: 2px;
 }
 
 .qr-table th:first-child,
@@ -1544,10 +1593,18 @@ textarea {
 }
 
 .qr-detail-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
   gap: 0.45rem;
   margin-top: 0.75rem;
+}
+
+.qr-detail-actions .btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-inline: 0.65rem;
+  white-space: nowrap;
 }
 
 .qr-detail-divider {
@@ -2128,7 +2185,7 @@ textarea {
 
 .hero-copy {
   position: relative;
-  animation: hero-enter 0.8s cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  animation: hero-enter 0.4s cubic-bezier(0.22, 1, 0.32, 1) both;
   min-width: 0;
   max-width: 100%;
 }
@@ -2150,14 +2207,14 @@ textarea {
   text-wrap: pretty;
   overflow-wrap: anywhere;
   line-height: 1.7;
-  animation: fade-up 0.65s 0.16s both;
+  animation: fade-up 0.35s 0.04s both;
 }
 
 .cta {
   display: flex;
   gap: 0.7rem;
   flex-wrap: wrap;
-  animation: fade-up 0.65s 0.24s both;
+  animation: fade-up 0.35s 0.08s both;
 }
 
 .cta .pri {
@@ -2173,7 +2230,7 @@ textarea {
   color: var(--mu);
   font-size: 0.92rem;
   margin-top: 1rem;
-  animation: fade-up 0.65s 0.32s both;
+  animation: fade-up 0.35s 0.12s both;
 }
 
 .eyebrow {
@@ -2245,8 +2302,7 @@ textarea {
   box-shadow: 0 26px 70px color-mix(in srgb, var(--ac) 23%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  animation: hero-enter 0.9s 0.12s cubic-bezier(0.2, 0.75, 0.25, 1) both,
-    stage-float 7s 1.2s ease-in-out infinite;
+  animation: hero-enter 0.42s 0.04s cubic-bezier(0.22, 1, 0.32, 1) both;
 }
 
 .stage-heading {
@@ -2311,8 +2367,9 @@ textarea {
   background: #111827;
   box-shadow: 0 16px 28px rgba(0, 0, 0, 0.28), 0 20px 35px rgba(0, 0, 0, 0.34),
     0 0 0 1px rgba(255, 255, 255, 0.18);
-  transform: rotate(-2deg);
-  animation: manager-float 5.5s 1.3s ease-in-out infinite;
+  transform: rotate(-2deg) translate3d(0, 0, 0);
+  animation: manager-float 6.5s ease-in-out infinite;
+  will-change: transform;
 }
 
 .manager-device::before {
@@ -2397,9 +2454,9 @@ textarea {
   display: flex;
   gap: 0.45rem;
   align-items: center;
-  transform: translateY(-18px) scale(0.96);
+  transform: translateY(-10px) scale(0.98);
   opacity: 0;
-  transition: transform 0.45s cubic-bezier(0.2, 1.1, 0.3, 1), opacity 0.25s;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.32, 1), opacity 0.18s;
 }
 
 .note .mark {
@@ -2430,7 +2487,7 @@ textarea {
 .note.show {
   transform: translateY(0) scale(1);
   opacity: 1;
-  animation: notice-pop 0.45s cubic-bezier(0.2, 1.15, 0.3, 1) both;
+  animation: notice-pop 0.26s cubic-bezier(0.22, 1, 0.32, 1) both;
 }
 
 .ph {
@@ -2508,7 +2565,7 @@ textarea {
   stroke: var(--mu);
   stroke-width: 1.5;
   stroke-linejoin: round;
-  transition: fill 0.2s, stroke 0.2s;
+  transition: fill 0.2s ease, stroke 0.2s ease;
 }
 
 .ds.on svg {
@@ -2543,7 +2600,7 @@ textarea {
   max-width: 22ch;
   text-wrap: balance;
   letter-spacing: -0.045em;
-  animation: fade-up 0.65s both;
+  animation: fade-up 0.38s both;
 }
 
 .sec h2::after {
@@ -2914,8 +2971,8 @@ textarea {
 .reveal-ready .feat > div,
 .reveal-ready .band {
   opacity: 0;
-  transform: translateY(22px);
-  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.25, 1);
+  transform: translateY(12px);
+  transition: opacity 0.38s ease, transform 0.38s cubic-bezier(0.22, 1, 0.32, 1);
 }
 
 .reveal-ready .is-visible {
@@ -2926,16 +2983,16 @@ textarea {
 .reveal-ready .vs > div:nth-child(2),
 .reveal-ready .steps li:nth-child(2),
 .reveal-ready .feat > div:nth-child(2) {
-  transition-delay: 0.1s;
+  transition-delay: 0.05s;
 }
 
 .reveal-ready .steps li:nth-child(3),
 .reveal-ready .feat > div:nth-child(3) {
-  transition-delay: 0.18s;
+  transition-delay: 0.08s;
 }
 
 .reveal-ready .feat > div:nth-child(4) {
-  transition-delay: 0.25s;
+  transition-delay: 0.12s;
 }
 
 @keyframes pop {
@@ -3016,21 +3073,23 @@ textarea {
 @keyframes manager-float {
   0%,
   100% {
-    transform: rotate(-2deg) translateY(0);
+    transform: rotate(-2deg) translate3d(0, 0, 0);
+  }
+  25% {
+    transform: rotate(-2deg) translate3d(0, -3px, 0);
   }
   50% {
-    transform: rotate(-1deg) translateY(-3px);
+    transform: rotate(-2deg) translate3d(0, -6px, 0);
+  }
+  75% {
+    transform: rotate(-2deg) translate3d(0, -3px, 0);
   }
 }
 
 @keyframes notice-pop {
   0% {
-    transform: translateY(-18px) scale(0.96);
+    transform: translateY(-8px) scale(0.98);
     opacity: 0;
-  }
-  70% {
-    transform: translateY(2px) scale(1.01);
-    opacity: 1;
   }
   100% {
     transform: none;
@@ -3054,7 +3113,7 @@ textarea {
   }
   .stage {
     border-radius: 26px;
-    animation: hero-enter 0.9s 0.12s cubic-bezier(0.2, 0.75, 0.25, 1) both;
+    animation: hero-enter 0.42s 0.04s cubic-bezier(0.22, 1, 0.32, 1) both;
   }
   .ph {
     border-radius: 30px 30px 0 0;
@@ -3141,7 +3200,7 @@ textarea {
     opacity: 0.25;
   }
   .hero .stage {
-    animation: hero-enter 0.9s 0.12s cubic-bezier(0.2, 0.75, 0.25, 1) both;
+    animation: hero-enter 0.42s 0.04s cubic-bezier(0.22, 1, 0.32, 1) both;
   }
 }
 

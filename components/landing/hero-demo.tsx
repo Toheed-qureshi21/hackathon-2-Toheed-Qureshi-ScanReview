@@ -42,12 +42,12 @@ function sleep(ms: number) {
 }
 
 export function HeroDemo() {
-  const [rating, setRating] = useState(0);
-  const [word, setWord] = useState("Watch the demo…");
-  const [showNote, setShowNote] = useState(false);
+  const [rating, setRating] = useState(1);
+  const [word, setWord] = useState(WORDS[0]);
+  const [showNote, setShowNote] = useState(true);
   const [noteTitle, setNoteTitle] = useState("1 star at Table 7");
   const [resultHtml, setResultHtml] = useState(
-    "This preview runs automatically.",
+    "<b>We’re sorry that happened.</b><br>We’ve told the manager. Someone will be right over.",
   );
   const typeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const runIdRef = useRef(0);
@@ -66,8 +66,8 @@ export function HeroDemo() {
       if (v <= 0) {
         setRating(0);
         setShowNote(false);
-        setWord("Watch the demo…");
-        setResultHtml("This preview runs automatically.");
+        setWord("");
+        setResultHtml("");
         return;
       }
 
@@ -84,6 +84,11 @@ export function HeroDemo() {
         setResultHtml(
           "<b>We’re sorry that happened.</b><br>We’ve told the manager. Someone will be right over.",
         );
+        return;
+      }
+
+      if (v < 5) {
+        setResultHtml("<b>Glad you enjoyed it!</b>");
         return;
       }
 
@@ -118,26 +123,17 @@ export function HeroDemo() {
       const reduce = window.matchMedia(
         "(prefers-reduced-motion: reduce)",
       ).matches;
-      const idleMs = reduce ? 600 : 1400;
-      const lowHoldMs = reduce ? 2800 : 4800;
-      const highHoldMs = reduce ? 3200 : 7200;
-      const resetMs = reduce ? 400 : 900;
+      const starStepMs = reduce ? 280 : 620;
+      const fiveHoldMs = reduce ? 1400 : 2800;
+      const loopGapMs = reduce ? 280 : 500;
 
       while (!cancelled && runIdRef.current === runId) {
-        applyRating(0);
-        await sleep(idleMs);
-        if (cancelled || runIdRef.current !== runId) return;
-
-        applyRating(1);
-        await sleep(lowHoldMs);
-        if (cancelled || runIdRef.current !== runId) return;
-
-        applyRating(0);
-        await sleep(resetMs);
-        if (cancelled || runIdRef.current !== runId) return;
-
-        applyRating(5);
-        await sleep(highHoldMs);
+        for (let value = 1; value <= 5; value += 1) {
+          applyRating(value);
+          await sleep(value === 5 ? fiveHoldMs : starStepMs);
+          if (cancelled || runIdRef.current !== runId) return;
+        }
+        await sleep(loopGapMs);
       }
     }
 

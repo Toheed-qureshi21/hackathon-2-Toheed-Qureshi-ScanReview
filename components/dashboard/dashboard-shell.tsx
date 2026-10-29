@@ -68,26 +68,13 @@ const WORKSPACE_NAV: NavItem[] = [
   
 ];
 
-const MANAGE_NAV: NavItem[] = [
 
-  {
-    href: "/dashboard/onboarding",
-    label: "Business onboarding",
-    icon: <QrCode size={18} strokeWidth={1.75} aria-hidden />,
-  },
-];
 
-function isNavActive(pathname: string, label: string): boolean {
-  if (label === "Business onboarding") {
-    return pathname.startsWith("/dashboard/onboarding");
-  }
-  if (label === "Guest feedback") {
-    return pathname.startsWith("/dashboard/feedback");
-  }
-  if (label === "QR codes") {
+function isNavActive(pathname: string, href: string): boolean {
+  if (href === "/dashboard") {
     return pathname === "/dashboard";
   }
-  return false;
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 /** Dashboard chrome aligned with scanreview-design/dashboard.html (UI-only). */
@@ -225,7 +212,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
       : null;
 
   function renderNavItem(item: NavItem) {
-    const active = isNavActive(pathname, item.label);
+    const active = isNavActive(pathname, item.href);
     const className = cn("dashboard-nav-link", active && "active");
 
     if (item.previewOnly) {
@@ -301,12 +288,6 @@ export function DashboardShell({ children }: DashboardShellProps) {
           <p className="dashboard-sidebar-label">Workspace</p>
           <nav className="dashboard-nav" aria-label="Workspace navigation">
             {WORKSPACE_NAV.map(renderNavItem)}
-          </nav>
-          <p className="dashboard-sidebar-label dashboard-sidebar-label--manage">
-            Manage
-          </p>
-          <nav className="dashboard-nav" aria-label="Manage navigation">
-            {MANAGE_NAV.map(renderNavItem)}
           </nav>
         </div>
        

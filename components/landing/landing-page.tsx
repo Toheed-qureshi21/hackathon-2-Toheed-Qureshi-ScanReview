@@ -3,6 +3,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { SkipToContent } from "@/components/ui/skip-link";
 import Link from "next/link";
 import { HeroDemo } from "./hero-demo";
+import { LandingFooterAuthLinks } from "./landing-auth-links";
 import { ScrollReveal } from "./scroll-reveal";
 import { SiteHeader } from "./site-header";
 
@@ -223,8 +224,7 @@ export function LandingPage() {
               </div>
               <div className="footer-group">
                 <h3>Get started</h3>
-                <Link href="/auth/login">Log in</Link>
-                <Link href="/auth/signup">Create your QR codes</Link>
+                <LandingFooterAuthLinks />
               </div>
               <div className="footer-group">
                 <h3>For your team</h3>
@@ -236,9 +236,6 @@ export function LandingPage() {
           </div>
           <div className="footer-bottom">
             <span>© 2026 ScanReview. All rights reserved.</span>
-            <Link href="#top" className="made">
-              Back to top <span aria-hidden="true">↑</span>
-            </Link>
           </div>
         </div>
       </footer>

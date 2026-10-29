@@ -43,7 +43,7 @@ function sleep(ms: number) {
 
 export function HeroDemo() {
   const [rating, setRating] = useState(1);
-  const [word, setWord] = useState(WORDS[0]);
+  const [word, setWord] = useState<string>(WORDS[0]);
   const [showNote, setShowNote] = useState(true);
   const [noteTitle, setNoteTitle] = useState("1 star at Table 7");
   const [resultHtml, setResultHtml] = useState(
@@ -74,7 +74,7 @@ export function HeroDemo() {
       setRating(v);
       setShowNote(v < 3);
       setNoteTitle(`${v}${v > 1 ? " stars" : " star"} at Table 7`);
-      setWord(WORDS[v - 1]);
+      setWord(WORDS[v - 1] ?? "");
 
       const reduce = window.matchMedia(
         "(prefers-reduced-motion: reduce)",

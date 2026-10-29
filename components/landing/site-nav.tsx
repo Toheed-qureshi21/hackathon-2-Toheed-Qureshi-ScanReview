@@ -13,6 +13,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { ThemeToggle } from "./theme-toggle";
+import { useLandingAuthCta } from "./use-landing-auth-cta";
 import { THEME_EMOJI, useTheme } from "./use-theme";
 
 const DESKTOP_NAV_MQ = "(min-width: 768px)";
@@ -28,6 +29,7 @@ function syncNavSheetTop() {
 export function SiteNav() {
   const [open, setOpen] = useState(false);
   const { theme, cycleTheme } = useTheme();
+  const { signedIn, href: appHref } = useLandingAuthCta();
   const menuId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -124,12 +126,20 @@ export function SiteNav() {
         className="nav-dropdown nav-dropdown--viewport"
         aria-label="Site menu"
       >
-        <MenuItemLink href="/auth/login" onClick={close}>
-          Log in
-        </MenuItemLink>
-        <MenuItemLink href="/auth/signup" variant="primary" onClick={close}>
-          Get started
-        </MenuItemLink>
+        {signedIn ? (
+          <MenuItemLink href={appHref} variant="primary" onClick={close}>
+            Dashboard
+          </MenuItemLink>
+        ) : (
+          <>
+            <MenuItemLink href="/auth/login" onClick={close}>
+              Log in
+            </MenuItemLink>
+            <MenuItemLink href="/auth/signup" variant="primary" onClick={close}>
+              Get started
+            </MenuItemLink>
+          </>
+        )}
         <MenuItemButton onClick={cycleTheme}>
           <span className="nav-dropdown-theme-label">Theme</span>
           <span className="nav-dropdown-theme-value">
@@ -144,12 +154,20 @@ export function SiteNav() {
     <nav className="nav" aria-label="Main">
       <div className="nav-desktop">
         <ThemeToggle />
-        <ButtonLink href="/auth/login" variant="ghost" size="sm">
-          Log in
-        </ButtonLink>
-        <ButtonLink href="/auth/signup" size="sm">
-          Get started
-        </ButtonLink>
+        {signedIn ? (
+          <ButtonLink href={appHref} size="sm">
+            Dashboard
+          </ButtonLink>
+        ) : (
+          <>
+            <ButtonLink href="/auth/login" variant="ghost" size="sm">
+              Log in
+            </ButtonLink>
+            <ButtonLink href="/auth/signup" size="sm">
+              Get started
+            </ButtonLink>
+          </>
+        )}
       </div>
       <div className="nav-menu-wrap">
         <Button

@@ -143,6 +143,11 @@
 - [x] Implement print/download affordances. If the real QR URL/token generation is not implemented yet, use an explicit demo placeholder rather than implying the code is production-ready.
 - [x] Keep manager/admin permission differences as UI states only if needed for the reference; server authorization is deferred.
 - [x] Verify responsive table/list behavior and keyboard accessibility.
+- [ ] Add an admin-only "Add QR Code" action to create additional spots from the dashboard.
+
+- [ ] Integrate the creation flow with Axios and React Query, including loading, success, error, and 50-spot limit states; refresh the spots list after success.
+
+- [ ] Verify that the newly created QR appears in the existing preview/print/download UI and opens the correct guest feedback page.
 
 **Exit criteria:** Dashboard can be demonstrated with mock data and all visible local controls behave predictably.
 

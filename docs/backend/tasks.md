@@ -88,7 +88,11 @@
 
 - [x] Implement authorized spot listing and QR payload retrieval/generation (`GET /api/spots`).
 - [x] Ensure admin-only spot creation/settings changes and manager read-only restrictions (`POST /api/spots` returns `501` for admins, `403` for managers).
-- [x] Enforce the 50-spot limit server-side (`take: 50` on list; cap at onboarding unchanged).
+- [x] Enforce manager read-only restrictions (`POST /api/spots` returns `403` for managers).
+
+- [ ] Implement admin-only additional spot creation through `POST /api/spots`, reusing the existing QR generation and Supabase Storage flow, with the 50-spot limit enforced server-side.
+
+- [ ] Test spot creation, authorization, the 50-spot limit, storage failures, and the generated QR's feedback URL.
 - [x] Build public URLs from a configured trusted application origin, not an untrusted `Host` header.
 - [x] Integrate dashboard QR preview/print/download with real spot data (Storage `qrImageUrl`).
 - [x] Test spot DTO URLs, missing QR path, query validation, and documented auth expectations. *(No live Supabase/DB HTTP integration in CI.)*

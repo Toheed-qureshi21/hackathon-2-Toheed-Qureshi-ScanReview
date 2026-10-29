@@ -6,8 +6,8 @@ export const queryKeys = {
     current: ["organization", "current"] as const,
   },
   spots: {
-    list: (organizationId?: string) =>
-      ["spots", { organizationId: organizationId ?? "current" }] as const,
+    list: (filters?: { search?: string }) =>
+      ["spots", "list", filters ?? {}] as const,
   },
   feedback: {
     list: (filters?: Record<string, unknown>) =>

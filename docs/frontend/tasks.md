@@ -215,7 +215,8 @@ This phase is intentionally deferred until the UI is reviewed and approved.
 - [ ] Implement Next.js Route Handlers; do not use Server Actions.
 - [x] Connect Axios endpoint functions and React Query queries/mutations for **current user** (`GET /api/auth/me` via `useCurrentUser`, login cache seed). *(Oct 2026)*
 - [x] Connect Axios/React Query for **admin onboarding** (`POST /api/organizations`, `useCreateOrganization`, QR grid uses persisted Supabase Storage `qrImageUrl` — no client-side QR generation on success). *(Oct 2026)*
-- [ ] Connect Axios/React Query for organization read/update, spots list, feedback, invites, and review draft APIs.
+- [x] Connect Axios/React Query for **spots list** (`GET /api/spots`, `useSpots`, dashboard QR manager). *(Oct 2026)*
+- [ ] Connect Axios/React Query for organization read/update, feedback, invites, and review draft APIs.
 - [ ] Use mutation responses to update React Query cache directly where possible; invalidate only affected data when a safe direct update is not possible.
 - [ ] Implement QR token generation, feedback persistence, Brevo alerts, Gemini draft generation, and invite acceptance.
 - [ ] Add server-side Zod validation, abuse controls, integration tests, and end-to-end tests.

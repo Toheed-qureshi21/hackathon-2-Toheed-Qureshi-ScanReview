@@ -6,7 +6,7 @@ import { getPublicEnv } from "@/lib/env/public";
 import { publicSpotFeedbackUrl } from "@/lib/feedback/public-spot-url";
 import { prisma } from "@/lib/db/prisma";
 import type { SupabaseAuthUser } from "@/lib/auth/me-mapper";
-import { buildOnboardingSpotDto } from "@/lib/services/onboarding-spot-dto";
+import { buildOnboardingSpotDto } from "@/lib/services/spot-dto";
 import { generatePublicSpotToken } from "@/lib/spots/public-token";
 import { renderQrPngBuffer } from "@/lib/spots/render-qr-png";
 import {

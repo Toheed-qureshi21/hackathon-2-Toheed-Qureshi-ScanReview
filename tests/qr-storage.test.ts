@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { buildOnboardingSpotDto } from "@/lib/services/onboarding-spot-dto";
+import { buildOnboardingSpotDto } from "@/lib/services/spot-dto";
 import { renderQrPngBuffer } from "@/lib/spots/render-qr-png";
 import {
   publicQrImageUrl,

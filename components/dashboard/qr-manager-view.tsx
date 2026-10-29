@@ -2,57 +2,67 @@
 
 import { Button } from "@/components/ui/button";
 import { DashboardToast } from "@/components/dashboard/dashboard-toast";
-import {
-  generateDemoQrDataUrl,
-  QrCodeVisual,
-} from "@/components/dashboard/qr-code-visual";
-import {
-  LOW_RATING_ALERT_COUNT,
-  mockOrganization,
-  mockQrSpots,
-  QR_AREAS,
-  type MockQrSpot,
-  type QrSpotStatus,
-} from "@/lib/mocks/dashboard";
-import { formatSpotName } from "@/lib/onboarding/constants";
+import { StoredQrImage } from "@/components/dashboard/qr-code-visual";
+import { useCurrentUser } from "@/hooks/queries/use-current-user";
+import { useSpots } from "@/hooks/queries/use-spots";
+import { ApiClientError } from "@/lib/api/api-error";
+import { LOW_RATING_ALERT_COUNT } from "@/lib/mocks/dashboard";
+import type { SpotListItem } from "@/types/spot";
 import { cn } from "@/lib/utils";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type FormEvent,
-} from "react";
+import Link from "next/link";
+import { useCallback, useMemo, useState } from "react";
 
 const PER_PAGE = 8;
-const ORG = mockOrganization;
 
-function statusLabel(status: QrSpotStatus): string {
-  return status.charAt(0).toUpperCase() + status.slice(1);
+type SpotStatus = "active" | "inactive";
+
+function spotStatus(spot: SpotListItem): SpotStatus {
+  return spot.qrImageUrl ? "active" : "inactive";
 }
 
-function makeId(): string {
-  return `qr-${Math.random().toString(36).slice(2, 8)}`;
+function statusLabel(status: SpotStatus): string {
+  return status === "active" ? "Active" : "Missing QR";
+}
+
+async function downloadQrPng(url: string, filename: string) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("download failed");
+  }
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objectUrl;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(objectUrl);
 }
 
 export function QrManagerView() {
-  const [spots, setSpots] = useState<MockQrSpot[]>(() =>
-    mockQrSpots.map((s) => ({ ...s })),
+  const { data: currentUser } = useCurrentUser();
+  const hasMembership = Boolean(currentUser?.membership);
+  const isAdmin = currentUser?.membership?.role === "ADMIN";
+
+  const {
+    data: spotsPayload,
+    isLoading,
+    isError,
+    error,
+  } = useSpots({ enabled: hasMembership });
+
+  const spots = useMemo(
+    () => spotsPayload?.spots ?? [],
+    [spotsPayload],
   );
-  const [selectedId, setSelectedId] = useState("t07");
+  const org = spotsPayload?.organization;
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [areaFilter, setAreaFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [modalOpen, setModalOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [bootLoading, setBootLoading] = useState(true);
-
-  useEffect(() => {
-    const t = window.setTimeout(() => setBootLoading(false), 400);
-    return () => window.clearTimeout(t);
-  }, []);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -62,13 +72,13 @@ export function QrManagerView() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return spots.filter((s) => {
-      const hay = `${s.name} ${s.area} ${s.detail}`.toLowerCase();
-      if (q && !hay.includes(q)) return false;
-      if (statusFilter !== "all" && s.status !== statusFilter) return false;
-      if (areaFilter !== "all" && s.area !== areaFilter) return false;
+      if (q && !s.displayName.toLowerCase().includes(q)) return false;
+      const status = spotStatus(s);
+      if (statusFilter === "active" && status !== "active") return false;
+      if (statusFilter === "inactive" && status !== "inactive") return false;
       return true;
     });
-  }, [spots, search, statusFilter, areaFilter]);
+  }, [spots, search, statusFilter]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const safePage = Math.min(page, pages);
@@ -77,113 +87,76 @@ export function QrManagerView() {
     safePage * PER_PAGE,
   );
 
-  const selected =
-    spots.find((s) => s.id === selectedId) ?? spots[0] ?? null;
+  const effectiveSelectedId =
+    selectedId && spots.some((s) => s.id === selectedId)
+      ? selectedId
+      : (spots[0]?.id ?? null);
 
-  const heroSpot =
-    spots.find((s) => s.id === "t07") ?? selected ?? spots[0];
+  const selected =
+    spots.find((s) => s.id === effectiveSelectedId) ?? null;
+
+  const heroSpot = selected ?? spots[0] ?? null;
 
   const stats = useMemo(
     () => ({
       total: spots.length,
-      active: spots.filter((s) => s.status === "active").length,
-      attention: spots.filter((s) => s.status !== "active").length,
+      active: spots.filter((s) => spotStatus(s) === "active").length,
+      attention: spots.filter((s) => spotStatus(s) !== "active").length,
     }),
     [spots],
   );
 
   function openCreateModal() {
-    setModalOpen(true);
-  }
-
-  function handleCreateSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const name = String(fd.get("name") ?? "").trim();
-    const area = String(fd.get("area") ?? "");
-    const detail = String(fd.get("detail") ?? "").trim();
-    const status = String(fd.get("status") ?? "draft") as QrSpotStatus;
-    if (!name) return;
-
-    const spotLabel = name.split(/\s+/)[0] ?? ORG.spotLabel;
-    const numMatch = name.match(/(\d+)\s*$/);
-    const spotNumber = numMatch ? Number(numMatch[1]) : spots.length + 1;
-    const slug =
-      name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "") || makeId();
-
-    const item: MockQrSpot = {
-      id: makeId(),
-      name,
-      spotLabel,
-      spotNumber,
-      area,
-      detail: detail || "—",
-      scans30d: 0,
-      feedbackCount: 0,
-      lastScanLabel: "Never",
-      status,
-      slug,
-    };
-    setSpots((prev) => [item, ...prev]);
-    setSelectedId(item.id);
-    setPage(1);
+    if (!isAdmin) {
+      showToast("Managers cannot create or change spots.");
+      return;
+    }
+    showToast("Adding spots after onboarding is not available yet.");
     setModalOpen(false);
-    showToast("Demo only: QR saved in this session (not persisted).");
   }
 
   async function downloadSelectedQr() {
-    if (!selected || selected.status !== "active") {
-      showToast("Activate this code before downloading (demo).");
+    if (!selected?.qrImageUrl) {
+      showToast("QR image is not available for this spot.");
       return;
     }
     try {
-      const url = await generateDemoQrDataUrl(ORG, selected, 260);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `scanreview-demo-${selected.id}.png`;
-      a.click();
-      showToast("Demo QR downloaded as PNG (not a production token).");
+      await downloadQrPng(
+        selected.qrImageUrl,
+        `scanreview-${selected.displayName.replace(/\s+/g, "-")}.png`,
+      );
+      showToast("QR downloaded.");
     } catch {
-      showToast("Demo QR download failed.");
+      showToast("Download failed. Try opening the image in a new tab.");
     }
   }
 
   async function printSelectedQr() {
-    if (!selected || selected.status !== "active") {
-      showToast("Activate this code before printing (demo).");
+    if (!selected?.qrImageUrl) {
+      showToast("QR image is not available for this spot.");
       return;
     }
-    try {
-      const url = await generateDemoQrDataUrl(ORG, selected, 260);
-      const w = window.open("", "_blank", "width=520,height=620");
-      if (!w) {
-        showToast("Allow pop-ups to print this demo QR.");
-        return;
-      }
-      w.document.write(
-        `<html><head><title>${selected.name} · ScanReview demo</title><style>body{font:16px system-ui;text-align:center;padding:32px;color:#12142b}img{width:260px;height:260px}h1{font-size:22px}p{color:#5a5f7a;font-size:14px}</style></head><body><h1>${selected.name}</h1><p>Scan and Rate us · Demo QR</p><img src="${url}" alt="Demo QR"/><p>UI preview — not a production feedback link.</p></body></html>`,
-      );
-      w.document.close();
-      w.focus();
-      w.print();
-    } catch {
-      showToast("Demo print preview failed.");
+    const w = window.open("", "_blank", "width=520,height=620");
+    if (!w) {
+      showToast("Allow pop-ups to print this QR.");
+      return;
     }
+    w.document.write(
+      `<html><head><title>${selected.displayName} · ScanReview</title><style>body{font:16px system-ui;text-align:center;padding:32px;color:#12142b}img{width:260px;height:260px}h1{font-size:22px}p{color:#5a5f7a;font-size:14px}</style></head><body><h1>${selected.displayName}</h1><p>Scan and rate us</p><img src="${selected.qrImageUrl}" alt="QR code"/><p>${selected.publicFeedbackUrl}</p></body></html>`,
+    );
+    w.document.close();
+    w.focus();
+    w.print();
   }
 
   function exportCsv() {
     const rows = [
-      ["Location", "Area", "Details", "Status", "Scans 30d", "Feedback"],
+      ["Location", "Feedback URL", "QR image URL", "Status"],
       ...spots.map((c) => [
-        c.name,
-        c.area,
-        c.detail,
-        c.status,
-        String(c.scans30d),
-        String(c.feedbackCount),
+        c.displayName,
+        c.publicFeedbackUrl,
+        c.qrImageUrl ?? "",
+        statusLabel(spotStatus(c)),
       ]),
     ];
     const csv = rows
@@ -193,10 +166,10 @@ export function QrManagerView() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "scanreview-qr-codes-demo.csv";
+    a.download = "scanreview-qr-codes.csv";
     a.click();
     URL.revokeObjectURL(url);
-    showToast("Exported demo CSV (mock data).");
+    showToast("Exported spot list.");
   }
 
   function toggleRowCheck(id: string, on: boolean) {
@@ -211,9 +184,34 @@ export function QrManagerView() {
     setChecked((prev) => ({ ...prev, ...next }));
   }
 
-  const demoUrlLabel = selected
-    ? `demo.local/feedback/demo (${selected.slug})`
-    : "—";
+  const spotLabel = org?.spotLabel ?? "Spot";
+  const orgName = org?.name ?? "Your business";
+
+  if (!hasMembership) {
+    return (
+      <div className="qr-manager">
+        <p className="hint" role="status">
+          Complete{" "}
+          <Link href="/dashboard/onboarding">business onboarding</Link> to
+          manage QR codes.
+        </p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    const message =
+      error instanceof ApiClientError
+        ? error.message
+        : "Unable to load spots.";
+    return (
+      <div className="qr-manager">
+        <p className="err" role="alert">
+          {message}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -221,12 +219,12 @@ export function QrManagerView() {
         <section className="page-heading">
           <div>
             <div className="eyebrow">
-              <i aria-hidden="true" /> {ORG.spotLabel.toUpperCase()}-SIDE FEEDBACK
+              <i aria-hidden="true" /> {spotLabel.toUpperCase()}-SIDE FEEDBACK
               SETUP
             </div>
             <h1>Your QR codes, all in one place.</h1>
             <p className="subtitle">
-              Create a code for every {ORG.spotLabel.toLowerCase()}, keep labels
+              Create a code for every {spotLabel.toLowerCase()}, keep labels
               organized, and see which touchpoints are ready to print.
             </p>
           </div>
@@ -234,14 +232,14 @@ export function QrManagerView() {
             <Button type="button" variant="ghost" onClick={exportCsv}>
               Export list
             </Button>
-            <Button type="button" onClick={openCreateModal}>
+            <Button type="button" onClick={openCreateModal} disabled={!isAdmin}>
               Create QR code
             </Button>
           </div>
         </section>
 
         <section className="qr-stats" aria-label="QR code summary">
-          {bootLoading ? (
+          {isLoading ? (
             <p className="hint qr-stats-loading">Loading summary…</p>
           ) : (
             <>
@@ -264,14 +262,14 @@ export function QrManagerView() {
                   <span className="stat-label">Low-rating alerts</span>
                 </div>
                 <div className="qr-stat-value">{LOW_RATING_ALERT_COUNT}</div>
-                <div className="qr-stat-note">Demo feedback items ≤ 2★</div>
+                <div className="qr-stat-note">Demo until feedback API</div>
               </article>
               <article className="qr-stat">
                 <div className="qr-stat-top">
                   <span className="stat-label">Need attention</span>
                 </div>
                 <div className="qr-stat-value">{stats.attention}</div>
-                <div className="qr-stat-note">Inactive or draft codes</div>
+                <div className="qr-stat-note">Missing stored QR image</div>
               </article>
             </>
           )}
@@ -284,26 +282,30 @@ export function QrManagerView() {
             </span>
             <h2>One scan can turn a bad experience around.</h2>
             <p>
-              Put a unique QR code on each {ORG.spotLabel.toLowerCase()}. Guests
+              Put a unique QR code on each {spotLabel.toLowerCase()}. Guests
               share feedback in seconds; your team responds before they leave.
             </p>
             <div className="qr-hero-actions">
-              <Button type="button" className="qr-white-btn" onClick={openCreateModal}>
-                Create a {ORG.spotLabel.toLowerCase()} code ↗
+              <Button
+                type="button"
+                className="qr-white-btn"
+                onClick={openCreateModal}
+                disabled={!isAdmin}
+              >
+                Create a {spotLabel.toLowerCase()} code ↗
               </Button>
             </div>
           </div>
           {heroSpot ? (
             <div className="qr-hero-art" aria-label="Sample QR preview">
               <div className="qr-art-label">
-                {ORG.name.toUpperCase()}{" "}
-                <span>{heroSpot.name.toUpperCase()}</span>
+                {orgName.toUpperCase()}{" "}
+                <span>{heroSpot.displayName.toUpperCase()}</span>
               </div>
               <div className="qr-art-paper">
-                <QrCodeVisual
-                  key={heroSpot.id}
-                  org={ORG}
-                  spot={heroSpot}
+                <StoredQrImage
+                  src={heroSpot.qrImageUrl}
+                  alt={`QR code for ${heroSpot.displayName}`}
                   size={112}
                 />
                 <div className="qr-art-caption">Scan and Rate us</div>
@@ -318,11 +320,10 @@ export function QrManagerView() {
               <div>
                 <h2>Your locations</h2>
                 <p>
-                  Manage labels and keep each printed code connected to the right
-                  spot.
+                  Manage labels and keep each printed code connected to the
+                  right spot.
                 </p>
               </div>
-              <span className="data-chip">Demo data</span>
             </div>
             <div className="qr-toolbar">
               <label className="qr-search">
@@ -334,7 +335,7 @@ export function QrManagerView() {
                     setSearch(e.target.value);
                     setPage(1);
                   }}
-                  placeholder={`Search ${ORG.spotLabel.toLowerCase()}s or areas…`}
+                  placeholder={`Search ${spotLabel.toLowerCase()}s…`}
                 />
               </label>
               <select
@@ -348,52 +349,38 @@ export function QrManagerView() {
               >
                 <option value="all">All statuses</option>
                 <option value="active">Active</option>
-                <option value="draft">Draft</option>
-                <option value="inactive">Inactive</option>
-              </select>
-              <select
-                className="qr-filter"
-                aria-label="Filter by area"
-                value={areaFilter}
-                onChange={(e) => {
-                  setAreaFilter(e.target.value);
-                  setPage(1);
-                }}
-              >
-                <option value="all">All areas</option>
-                {QR_AREAS.map((area) => (
-                  <option key={area} value={area}>
-                    {area}
-                  </option>
-                ))}
+                <option value="inactive">Missing QR</option>
               </select>
             </div>
             <div
               className={cn(
                 "qr-table-wrap",
-                filtered.length === 0 && "has-empty",
+                filtered.length === 0 && !isLoading && "has-empty",
               )}
             >
-              {bootLoading ? (
+              {isLoading ? (
                 <p className="hint dash-table-loading">Loading spots…</p>
               ) : filtered.length === 0 ? (
                 <div className="qr-empty" role="status">
                   <strong>No matching QR codes</strong>
                   <p className="hint">
-                    Try another search or clear your filters.
+                    {spots.length === 0
+                      ? "No spots yet. Finish onboarding to create your first codes."
+                      : "Try another search or clear your filters."}
                   </p>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => {
-                      setSearch("");
-                      setStatusFilter("all");
-                      setAreaFilter("all");
-                      setPage(1);
-                    }}
-                  >
-                    Clear filters
-                  </Button>
+                  {spots.length > 0 ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        setSearch("");
+                        setStatusFilter("all");
+                        setPage(1);
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                  ) : null}
                 </div>
               ) : (
                 <table className="qr-table">
@@ -418,67 +405,61 @@ export function QrManagerView() {
                         />
                       </th>
                       <th>Location</th>
-                      <th>Area</th>
-                      <th>Scans · 30 days</th>
+                      <th>Number</th>
                       <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {visible.map((spot) => (
-                      <tr
-                        key={spot.id}
-                        className={cn(spot.id === selectedId && "selected")}
-                        onClick={(e) => {
-                          if (
-                            (e.target as HTMLElement).closest(
-                              "input,button,a",
-                            )
-                          ) {
-                            return;
-                          }
-                          setSelectedId(spot.id);
-                        }}
-                      >
-                        <td className="qr-check-col">
-                          <input
-                            type="checkbox"
-                            aria-label={`Select ${spot.name}`}
-                            checked={!!checked[spot.id]}
-                            onChange={(e) =>
-                              toggleRowCheck(spot.id, e.target.checked)
+                    {visible.map((spot) => {
+                      const status = spotStatus(spot);
+                      return (
+                        <tr
+                          key={spot.id}
+                          className={cn(
+                            spot.id === effectiveSelectedId && "selected",
+                          )}
+                          onClick={(e) => {
+                            if (
+                              (e.target as HTMLElement).closest(
+                                "input,button,a",
+                              )
+                            ) {
+                              return;
                             }
-                          />
-                        </td>
-                        <td>
-                          <button
-                            type="button"
-                            className="location-cell"
-                            onClick={() => setSelectedId(spot.id)}
-                          >
-                            <strong>{spot.name}</strong>
-                            <small>{spot.detail}</small>
-                          </button>
-                        </td>
-                        <td>
-                          <span className="area-label">{spot.area}</span>
-                        </td>
-                        <td>
-                          <strong className="scan-number">
-                            {spot.scans30d.toLocaleString()}
-                          </strong>
-                          <span className="scan-caption">
-                            {spot.feedbackCount} feedback
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className={cn("status-badge", spot.status)}
-                          >
-                            {statusLabel(spot.status)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                            setSelectedId(spot.id);
+                          }}
+                        >
+                          <td className="qr-check-col">
+                            <input
+                              type="checkbox"
+                              aria-label={`Select ${spot.displayName}`}
+                              checked={!!checked[spot.id]}
+                              onChange={(e) =>
+                                toggleRowCheck(spot.id, e.target.checked)
+                              }
+                            />
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className="location-cell"
+                              onClick={() => setSelectedId(spot.id)}
+                            >
+                              <strong>{spot.displayName}</strong>
+                              <small>{spot.publicFeedbackPath}</small>
+                            </button>
+                          </td>
+                          <td>
+                            <strong className="scan-number">{spot.number}</strong>
+                          </td>
+                          <td>
+                            <span className={cn("status-badge", status)}>
+                              {statusLabel(status)}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               )}
@@ -521,70 +502,47 @@ export function QrManagerView() {
                 <div className="qr-detail-head">
                   <div>
                     <span className="qr-detail-eyebrow">SELECTED CODE</span>
-                    <h2>{selected.name}</h2>
-                    <p>
-                      {selected.area} · {selected.detail}
-                    </p>
+                    <h2>{selected.displayName}</h2>
+                    <p>Spot {selected.number}</p>
                   </div>
                 </div>
                 <div className="qr-detail-paper">
-                  <QrCodeVisual
-                    key={selected.id}
-                    org={ORG}
-                    spot={selected}
+                  <StoredQrImage
+                    src={selected.qrImageUrl}
+                    alt={`QR code for ${selected.displayName}`}
                     size={144}
                   />
                   <p className="q-cta">Scan and Rate us</p>
-                  <p className="q-spot">
-                    {formatSpotName(selected.spotLabel, selected.spotNumber)}
-                  </p>
-                  <span className="qr-url">{demoUrlLabel}</span>
-                  <p className="hint qr-demo-note">
-                    Demo URL shape — not a production token.
-                  </p>
+                  <p className="q-spot">{selected.displayName}</p>
+                  <span className="qr-url">{selected.publicFeedbackUrl}</span>
                 </div>
                 <div className="qr-detail-actions">
                   <Button
                     type="button"
-                    onClick={downloadSelectedQr}
-                    disabled={selected.status !== "active"}
+                    onClick={() => void downloadSelectedQr()}
+                    disabled={!selected.qrImageUrl}
                   >
                     Download QR
                   </Button>
                   <Button
                     type="button"
                     variant="ghost"
-                    onClick={printSelectedQr}
-                    disabled={selected.status !== "active"}
+                    onClick={() => void printSelectedQr()}
+                    disabled={!selected.qrImageUrl}
                   >
                     Print
                   </Button>
                 </div>
-                <div className="qr-detail-divider" />
-                <div className="qr-detail-metrics">
-                  <div>
-                    <span>Scans this month</span>
-                    <strong>{selected.scans30d.toLocaleString()}</strong>
-                  </div>
-                  <div>
-                    <span>Feedback received</span>
-                    <strong>{selected.feedbackCount.toLocaleString()}</strong>
-                  </div>
-                  <div>
-                    <span>Last scan</span>
-                    <strong>{selected.lastScanLabel}</strong>
-                  </div>
-                </div>
               </>
             ) : (
-              <p className="hint">Select a spot to preview its demo QR.</p>
+              <p className="hint">Select a spot to preview its QR.</p>
             )}
           </aside>
         </section>
 
         <p className="qr-disclaimer">
-          Dashboard preview · Sample data. QR codes and feedback shown here are
-          illustrative until connected to your ScanReview backend.
+          QR images are loaded from your saved Supabase Storage bucket. Guest
+          feedback counts remain demo until the feedback API is connected.
         </p>
       </div>
 
@@ -599,7 +557,7 @@ export function QrManagerView() {
             <div className="qr-modal-head">
               <div>
                 <h2 id="qr-modal-title">Create a QR code</h2>
-                <p>Demo only — adds a row in this session.</p>
+                <p>Not available in this release.</p>
               </div>
               <button
                 type="button"
@@ -610,53 +568,6 @@ export function QrManagerView() {
                 ×
               </button>
             </div>
-            <form className="qr-form" onSubmit={handleCreateSubmit}>
-              <label>
-                Location name
-                <input
-                  name="name"
-                  required
-                  maxLength={50}
-                  placeholder={`e.g. ${ORG.spotLabel} 12`}
-                />
-              </label>
-              <label>
-                Area
-                <select name="area" required defaultValue={QR_AREAS[0]}>
-                  {QR_AREAS.map((a) => (
-                    <option key={a} value={a}>
-                      {a}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Location details
-                <input
-                  name="detail"
-                  maxLength={80}
-                  placeholder="e.g. Window side"
-                />
-              </label>
-              <label>
-                Code status
-                <select name="status" defaultValue="draft">
-                  <option value="active">Active — ready for guests</option>
-                  <option value="draft">Draft — not ready to print</option>
-                  <option value="inactive">Inactive — disabled</option>
-                </select>
-              </label>
-              <div className="qr-form-actions">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Create QR code</Button>
-              </div>
-            </form>
           </div>
         </div>
       ) : null}

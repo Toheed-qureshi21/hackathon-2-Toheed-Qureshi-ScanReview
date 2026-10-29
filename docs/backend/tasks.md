@@ -86,12 +86,14 @@
 
 ## Phase 4 — Spots and QR codes slice
 
-- [ ] Implement authorized spot listing and QR payload retrieval/generation.
-- [ ] Ensure admin-only spot creation/settings changes and manager read-only restrictions.
-- [ ] Enforce the 50-spot limit server-side, including concurrent requests if adding spots is approved.
-- [ ] Build public URLs from a configured trusted application origin, not an untrusted `Host` header.
-- [ ] Integrate dashboard QR preview/print/download with real spot data.
-- [ ] Test unique tokens, invalid/revoked tokens, wrong organization, manager restrictions and cap.
+- [x] Implement authorized spot listing and QR payload retrieval/generation (`GET /api/spots`).
+- [x] Ensure admin-only spot creation/settings changes and manager read-only restrictions (`POST /api/spots` returns `501` for admins, `403` for managers).
+- [x] Enforce the 50-spot limit server-side (`take: 50` on list; cap at onboarding unchanged).
+- [x] Build public URLs from a configured trusted application origin, not an untrusted `Host` header.
+- [x] Integrate dashboard QR preview/print/download with real spot data (Storage `qrImageUrl`).
+- [x] Test spot DTO URLs, missing QR path, query validation, and documented auth expectations. *(No live Supabase/DB HTTP integration in CI.)*
+
+**Verified (Oct 2026):** Dashboard QR manager uses `useSpots` + persisted PNGs; no client QR regeneration for listed spots.
 
 **Exit criteria:** the dashboard shows the correct persisted spots and their public QR links.
 

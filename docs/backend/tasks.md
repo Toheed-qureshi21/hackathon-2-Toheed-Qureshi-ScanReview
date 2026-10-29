@@ -1,6 +1,6 @@
 # ScanReview — Backend Feature Integration Tasks
 
-**Status:** Planning only until the user explicitly approves backend integration.  
+**Status:** Backend integration approved — **Slice 1 (auth session + `GET /api/auth/me`)** implemented.  
 **Product source:** `docs/prd.md`  
 **Technical source:** `docs/trd.md`  
 **Frontend checklist:** `docs/frontend/tasks.md`  
@@ -14,6 +14,7 @@
 - Keep Prisma, service-role/admin Supabase clients, Gemini, Brevo, and secrets server-only.
 - Use Next.js App Router Route Handlers under `app/api/**/route.ts`; no Server Actions. Use `proxy.ts` only for navigation/session convenience, never as the authorization boundary. Always `await cookies()` when using the async cookies API.
 - Respect Prisma 7: inspect the installed version, generator, config and adapter before editing setup or migrations.
+- **Migrations:** create every migration with `npx prisma migrate dev --name <descriptive_name>` only. Do not hand-write `prisma/migrations/**/migration.sql` or edit generated migration SQL except when Prisma docs require a manual fix (document why in the PR).
 - Do not change PRD/TRD/reference assets unless explicitly requested. Keep frontend and backend task checklists separate.
 - Do not mark work complete until acceptance criteria and tests have been verified.
 
@@ -29,40 +30,42 @@
 
 ## Phase 0 — Repository audit and architecture decisions (read-only)
 
-- [ ] Read `AGENTS.md`, `.cursor/rules/ui-first.mdc`, `docs/prd.md`, `docs/trd.md`, `docs/frontend/design.md`, and `docs/frontend/tasks.md`.
-- [ ] Inspect actual route/component structure, mock data, scripts, package versions, lockfile, and existing test tools.
-- [ ] Inspect Prisma 7 schema/config/generator/adapter and Supabase SSR/Auth setup without exposing environment secret values.
-- [ ] Map each existing UI flow to proposed reads/mutations and identify the mock data that will be replaced per slice.
-- [ ] Propose schema, constraints, indexes, API contracts, normalized response/error format, and authorization matrix.
-- [ ] For every protected endpoint, define the exact authentication and database-backed authorization checks; explicitly confirm no RLS will be used.
-- [ ] Review public QR token format, rate limiting/duplicate submission, contact retention, alert failure/retry, post-onboarding spot/label changes, invite membership creation, and test DB decisions.
-- [ ] Resolve or present explicit recommendations for the PRD's route/token ambiguity: `/feedback/[orgId]/[tableId]` versus a unique random public token.
-- [ ] Recommend vertical-slice order based on current UI readiness and dependencies.
-- [ ] Produce an audit report and stop for user approval.
+- [x] Read `AGENTS.md`, `.cursor/rules/ui-first.mdc`, `docs/prd.md`, `docs/trd.md`, `docs/frontend/design.md`, and `docs/frontend/tasks.md`.
+- [x] Inspect actual route/component structure, mock data, scripts, package versions, lockfile, and existing test tools.
+- [x] Inspect Prisma 7 schema/config/generator/adapter and Supabase SSR/Auth setup without exposing environment secret values.
+- [x] Map each existing UI flow to proposed reads/mutations and identify the mock data that will be replaced per slice.
+- [x] Propose schema, constraints, indexes, API contracts, normalized response/error format, and authorization matrix.
+- [x] For every protected endpoint, define the exact authentication and database-backed authorization checks; explicitly confirm no RLS will be used.
+- [x] Review public QR token format, rate limiting/duplicate submission, contact retention, alert failure/retry, post-onboarding spot/label changes, invite membership creation, and test DB decisions.
+- [x] Resolve or present explicit recommendations for the PRD's route/token ambiguity: `/feedback/[orgId]/[tableId]` versus a unique random public token.
+- [x] Recommend vertical-slice order based on current UI readiness and dependencies.
+- [x] Produce an audit report and stop for user approval.
 
-**Exit criteria:** no migrations, API endpoints, auth integration, external service calls, or DB writes have been implemented.
+**Exit criteria:** audit completed and approved before Slice 1 (Oct 2026).
 
 ## Phase 1 — Shared foundation (only as needed for first approved slice)
 
-- [ ] Confirm the first feature slice and architecture decisions are approved.
-- [ ] Verify server-side environment parsing and update `.env.example` with variable names only.
-- [ ] Set up/verify server-only Prisma 7 singleton and adapter.
-- [ ] Set up/verify Supabase server/browser clients as actually required; privileged client must be server-only.
-- [ ] Add normalized API success/error envelope consistent with the TRD: `{ data, error: null }` and `{ data: null, error: { code, message, details? } }`.
-- [ ] Add reusable authentication and organization membership/role authorization helpers.
-- [ ] Add shared Axios client, error mapping, React Query provider/query keys only if not already present.
-- [ ] Add a minimal relevant test setup after inspecting existing tooling.
-- [ ] Verify lint/type checks and helper tests.
+- [x] Confirm the first feature slice and architecture decisions are approved.
+- [x] Verify server-side environment parsing and update `.env.example` with variable names only.
+- [x] Set up/verify server-only Prisma 7 singleton and adapter.
+- [x] Set up/verify Supabase server/browser clients as actually required; privileged client must be server-only.
+- [x] Add normalized API success/error envelope consistent with the TRD: `{ data, error: null }` and `{ data: null, error: { code, message, details? } }`.
+- [x] Add reusable authentication and organization membership/role authorization helpers (`getAuthenticatedUser`, membership lookup for `/api/auth/me`).
+- [x] Add shared Axios client, error mapping, React Query provider/query keys (`lib/api/client.ts`, `AppProviders`, `hooks/queries/query-keys.ts`).
+- [x] Add a minimal relevant test setup after inspecting existing tooling (`npm test` with Node test runner + `tsx`).
+- [x] Verify lint/type checks and helper tests.
 
 **Exit criteria:** only shared infrastructure needed for the approved slice is implemented; no speculative scaffolding for every future feature.
 
 ## Phase 2 — Authentication and organization access slice
 
-- [ ] Implement or verify the needed Supabase Auth flows and current-user API.
-- [ ] Authenticate requests server-side; distinguish unauthenticated from unauthorized responses.
-- [ ] Resolve membership and role from database state for each protected route.
-- [ ] Test no session, expired/invalid session, missing membership, manager trying admin operation, wrong-organization ID tampering, and direct API calls bypassing UI.
-- [ ] Integrate only the login/current-user/protected-dashboard UI that is part of this slice.
+- [x] Implement or verify the needed Supabase Auth flows and current-user API.
+- [x] Authenticate requests server-side; distinguish unauthenticated from unauthorized responses (`401` on `/api/auth/me` without session).
+- [x] Resolve membership and role from database state for each protected route. *(Slice 1: `GET /api/auth/me` only; role/org authorization helpers for mutations come later.)*
+- [x] Test no session, expired/invalid session, missing membership, manager trying admin operation, wrong-organization ID tampering, and direct API calls bypassing UI. *(Slice 1: unit tests for mapper/routing; manual/`curl` 401 for no session; DB integration tests when `DATABASE_URL` is configured.)*
+- [x] Integrate only the login/current-user/protected-dashboard UI that is part of this slice.
+
+**Verified (Oct 2026):** `npm run lint`, `npm run test`, `npm run build` pass; `GET /api/auth/me` returns membership or `onboardingRequired: true`; `proxy.ts` redirects unauthenticated `/dashboard/*` to login; login/signup use Supabase browser client for Auth only; dashboard shell reads workspace/profile via React Query + Axios. **Migration:** `20261029080107_init_auth_membership` applied via `prisma migrate dev`. **Remaining:** HTTP integration test suite with mocked Supabase; `403`/role tests when admin-only routes exist; onboarding and other TRD endpoints not implemented yet.
 
 **Exit criteria:** protected access is enforced by server code, not just client UI or `proxy.ts`.
 

@@ -159,6 +159,14 @@ Backend integration strategy
 - For each approved feature slice, implement only the required schema/migration, Zod validation, server-only service logic, Route Handler, tests, Axios API function, React Query hook, and UI integration. Verify that slice before moving to the next.
 - Keep docs/backend/tasks.md as the backend checklist and docs/frontend/tasks.md as the frontend checklist. Update only tasks that were actually verified.
 - The existing .cursor/rules/ui-first.mdc remains in force until the user explicitly approves backend integration and names the first slice.
+Client data access
+- Application reads and mutations: **Client → React Query hook → Axios (`lib/api/*`) → Route Handler → auth/Zod/service → Prisma**. Do not use the Supabase browser client for organization, spots, feedback, or dashboard data.
+- Supabase browser client is allowed for **Auth sign-in/sign-up** only (session cookies; Axios uses `withCredentials` for same-origin `/api`).
+
+Database migrations (Prisma)
+- Create schema migrations only with `npx prisma migrate dev --name <descriptive_name>`. Do not add hand-written migration folders or SQL unless Prisma documentation explicitly requires a follow-up edit (and note that in the change).
+- Use `DIRECT_URL` (Supabase direct Postgres) for the Prisma CLI; keep pooled `DATABASE_URL` for the app runtime.
+
 Database access and no-RLS policy
 - This project does not use PostgreSQL Row-Level Security (RLS). Do not add RLS policies or treat RLS as the authorization layer.
 - Enforce all request validation with Zod in server-side Route Handlers and/or their server-only helpers/services. Client-side validation is UX only and never a security boundary.

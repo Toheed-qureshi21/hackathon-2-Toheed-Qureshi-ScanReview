@@ -1,13 +1,18 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/hooks/queries/query-keys";
+import { ApiClientError } from "@/lib/api/api-error";
+import { getAuthMe } from "@/lib/api/auth";
+import { resolvePostAuthPath } from "@/lib/auth/post-auth-routing";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
 import { AuthModeTabs } from "./auth-mode-tabs";
 
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
-const DEMO_FAIL_EMAIL = "fail@demo.scanreview";
 
 export type AuthCredentialsMode = "login" | "signup";
 
@@ -17,6 +22,8 @@ type AuthCredentialsFormProps = {
 
 export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const signup = mode === "signup";
 
   const formId = useId();
@@ -29,14 +36,14 @@ export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [demoMessage, setDemoMessage] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const selectMode = useCallback(
     (nextSignup: boolean) => {
       router.push(nextSignup ? "/auth/signup" : "/auth/login");
       setError("");
-      setDemoMessage("");
+      setInfoMessage("");
       setSubmitting(false);
     },
     [router],
@@ -62,9 +69,9 @@ export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
     return "";
   }
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setDemoMessage("");
+    setInfoMessage("");
     const message = validate();
     if (message) {
       setError(message);
@@ -73,24 +80,60 @@ export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
     setError("");
     setSubmitting(true);
 
-    window.setTimeout(() => {
-      setSubmitting(false);
-      if (email.trim().toLowerCase() === DEMO_FAIL_EMAIL) {
-        setDemoMessage("");
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const trimmedEmail = email.trim();
+
+      if (signup) {
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: trimmedEmail,
+          password,
+          options: {
+            data: { full_name: name.trim() },
+          },
+        });
+        if (signUpError) {
+          setError(signUpError.message);
+          return;
+        }
+        if (!data.session) {
+          setInfoMessage(
+            "Check your email to confirm your account, then log in.",
+          );
+          return;
+        }
+      } else {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: trimmedEmail,
+          password,
+        });
+        if (signInError) {
+          setError(signInError.message);
+          return;
+        }
+      }
+
+      const me = await getAuthMe();
+      queryClient.setQueryData(queryKeys.auth.me, me);
+
+      const next = searchParams.get("next");
+      router.push(resolvePostAuthPath(me, next));
+      router.refresh();
+    } catch (err) {
+      if (err instanceof ApiClientError) {
         setError(
-          signup
-            ? "Demo only: sign-up failed (simulated). No account was created."
-            : "Demo only: sign-in failed (simulated). You are not signed in.",
+          err.status === 401
+            ? "Signed in, but the session could not be verified. Try again."
+            : err.message,
         );
         return;
       }
-      setError("");
-      setDemoMessage(
-        signup
-          ? "Demo only: account creation is not connected. In production, you would continue to onboarding."
-          : "Demo only: authentication is not connected. In production, you would continue to the dashboard.",
+      setError(
+        "Authentication is not configured. Check Supabase environment variables.",
       );
-    }, 600);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const title = signup ? "Create your account" : "Welcome back";
@@ -172,9 +215,9 @@ export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
             {error}
           </p>
         ) : null}
-        {demoMessage ? (
+        {infoMessage ? (
           <p className="auth-demo-notice" role="status">
-            {demoMessage}
+            {infoMessage}
           </p>
         ) : null}
         <Button
@@ -186,9 +229,6 @@ export function AuthCredentialsForm({ mode }: AuthCredentialsFormProps) {
         >
           {submitting ? "Please wait" : submitLabel}
         </Button>
-        <p className="hint auth-demo-hint">
-          Demo: use <code>{DEMO_FAIL_EMAIL}</code> to preview a simulated error.
-        </p>
       </form>
     </>
   );

@@ -101,7 +101,13 @@
 ### Signup
 - [x] Confirm whether a separate signup design exists in the HTML references or PRD. Reuse the login visual system only if no separate design is supplied.
 - [x] Implement the signup UI needed by the PRD without inventing unrelated fields.
-- [x] Keep submission simulated and clearly separate from real authentication.
+- [x] Keep submission simulated and clearly separate from real authentication. *(UI phase — superseded for login/signup by Backend Slice 1 below.)*
+
+### Backend Slice 1 — Supabase auth (login/signup only)
+
+- [x] Wire login and signup to Supabase Auth (browser client + cookie session).
+- [x] After sign-in, call `GET /api/auth/me` and route to `/dashboard/onboarding` when `onboardingRequired`, else `/dashboard` (or safe `?next=`).
+- [x] Dashboard routes use `proxy.ts` redirect to login when no session (navigation convenience only).
 
 ### Accept invite (`accept-invite.html`)
 - [x] Reproduce manager invite/password setup layout.
@@ -205,9 +211,10 @@ This phase is intentionally deferred until the UI is reviewed and approved.
 
 - [ ] Finalize API contracts and DTOs.
 - [ ] Implement Prisma schema/migrations and database access.
-- [ ] Implement Supabase Auth and organization authorization.
+- [ ] Implement Supabase Auth and organization authorization. *(Partial: Slice 1 — login/signup + `/api/auth/me`; accept-invite, dashboard data, and role gates still mock/deferred.)*
 - [ ] Implement Next.js Route Handlers; do not use Server Actions.
-- [ ] Connect Axios endpoint functions and React Query queries/mutations.
+- [x] Connect Axios endpoint functions and React Query queries/mutations for **current user** (`GET /api/auth/me` via `useCurrentUser`, login cache seed). *(Oct 2026)*
+- [ ] Connect Axios/React Query for onboarding, organization, spots, feedback, invites, and review draft APIs.
 - [ ] Use mutation responses to update React Query cache directly where possible; invalidate only affected data when a safe direct update is not possible.
 - [ ] Implement QR token generation, feedback persistence, Brevo alerts, Gemini draft generation, and invite acceptance.
 - [ ] Add server-side Zod validation, abuse controls, integration tests, and end-to-end tests.

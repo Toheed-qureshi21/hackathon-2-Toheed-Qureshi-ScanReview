@@ -157,8 +157,8 @@ How a manager gets their password (Supabase Auth):
 # install dependencies
 npm install
 
-# set up the database
-npx prisma migrate dev
+# set up the database (requires valid DIRECT_URL / DATABASE_URL in .env)
+npx prisma migrate dev --name init_auth_membership
 
 # run locally
 npm run dev

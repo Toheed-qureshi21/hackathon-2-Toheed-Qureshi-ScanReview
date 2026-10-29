@@ -4,6 +4,11 @@ import { ThemeToggle } from "@/components/landing/theme-toggle";
 import { useDashboardSearch } from "@/components/dashboard/dashboard-search-context";
 import { BrandLink } from "@/components/ui/brand-link";
 import { Button } from "@/components/ui/button";
+import { useCurrentUser } from "@/hooks/queries/use-current-user";
+import {
+  initialsFromLabel,
+  roleLabel,
+} from "@/lib/auth/display-name";
 import {
   LOW_RATING_ALERT_COUNT,
   mockOrganization,
@@ -114,7 +119,25 @@ function isNavActive(pathname: string, label: string): boolean {
 /** Dashboard chrome aligned with scanreview-design/dashboard.html (UI-only). */
 export function DashboardShell({ children }: DashboardShellProps) {
   const pathname = usePathname();
+  const { data: currentUser, isLoading: userLoading } = useCurrentUser();
   const { globalSearch, setGlobalSearch } = useDashboardSearch();
+
+  const workspaceName =
+    currentUser?.membership?.organization.name ?? mockOrganization.name;
+  const workspaceSubtitle =
+    currentUser?.membership?.organization.name != null
+      ? "Your workspace"
+      : mockOrganization.workspaceSubtitle;
+  const workspaceInitials = initialsFromLabel(workspaceName);
+
+  const profileName =
+    currentUser?.user.fullName?.trim() ||
+    currentUser?.user.email?.split("@")[0] ||
+    mockOrganization.name;
+  const profileRole = currentUser?.membership
+    ? roleLabel(currentUser.membership.role)
+    : "Set up your business";
+  const profileInitials = initialsFromLabel(profileName);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -246,11 +269,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
             }
           >
             <span className="dashboard-avatar" aria-hidden="true">
-              BB
+              {userLoading ? "…" : workspaceInitials}
             </span>
             <span className="dashboard-workspace-copy">
-              <strong>{mockOrganization.name}</strong>
-              <span>{mockOrganization.workspaceSubtitle}</span>
+              <strong>{userLoading ? "Loading…" : workspaceName}</strong>
+              <span>{userLoading ? " " : workspaceSubtitle}</span>
             </span>
           </button>
           <p className="dashboard-sidebar-label">Workspace</p>
@@ -279,11 +302,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
           </div>
           <div className="dashboard-profile">
             <span className="dashboard-avatar dashboard-avatar--profile">
-              AM
+              {userLoading ? "…" : profileInitials}
             </span>
             <div className="dashboard-workspace-copy">
-              <strong>Alex Morgan</strong>
-              <span>Restaurant manager</span>
+              <strong>{userLoading ? "Loading…" : profileName}</strong>
+              <span>{userLoading ? " " : profileRole}</span>
             </div>
           </div>
         </div>
